@@ -1,0 +1,3 @@
+[submodule "BrawlCrate"]
+	path = BrawlCrate
+	url = https://github.com/soopercool101/BrawlCrate.git
