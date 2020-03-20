@@ -1,6 +1,7 @@
 ﻿using HSDRaw.Melee.Gr;
 using System;
 using System.Windows.Forms;
+using BrawlLib.SSBB;
 
 namespace HSDRawViewer.ContextMenus
 {
@@ -24,6 +25,21 @@ namespace HSDRawViewer.ContextMenus
                 }
             };
             MenuItems.Add(Export);
+
+            MenuItem ExportBrawlLib = new MenuItem("Export As COLL");
+            ExportBrawlLib.Click += (sender, args) =>
+            {
+                using (SaveFileDialog sd = new SaveFileDialog())
+                {
+                    sd.Filter = FileFilters.CollisionDef;
+
+                    if (sd.ShowDialog() == DialogResult.OK)
+                    {
+                        Converters.ConvCOLL.CollDataToBrawl(sd.FileName, MainForm.SelectedDataNode.Accessor as SBM_Coll_Data);
+                    }
+                }
+            };
+            MenuItems.Add(ExportBrawlLib);
         }
     }
 }

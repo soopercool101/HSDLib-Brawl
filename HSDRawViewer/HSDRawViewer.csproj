@@ -131,6 +131,7 @@
     <Compile Include="ContextMenus\UnidentifiedContextMenu.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Converters\ConvCOLL.cs" />
     <Compile Include="Converters\ConvFOBJ.cs" />
     <Compile Include="Converters\ConvSVG.cs" />
     <Compile Include="Converters\DAEWriter.cs" />
