@@ -4,8 +4,14 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 16.0.29911.84
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HSDRawViewer", "HSDRawViewer\HSDRawViewer.csproj", "{755580A7-D09D-4EEC-9129-2DD7A6951A31}"
+	ProjectSection(ProjectDependencies) = postProject
+		{67CB8760-2D66-4AC1-BD54-0D6BB68FA11A} = {67CB8760-2D66-4AC1-BD54-0D6BB68FA11A}
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HSDRaw", "HSDRaw\HSDRaw.csproj", "{ED9126AF-8A1E-465D-840A-8754A945414D}"
+	ProjectSection(ProjectDependencies) = postProject
+		{67CB8760-2D66-4AC1-BD54-0D6BB68FA11A} = {67CB8760-2D66-4AC1-BD54-0D6BB68FA11A}
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BrawlLib", "BrawlCrate\BrawlLib\BrawlLib.csproj", "{67CB8760-2D66-4AC1-BD54-0D6BB68FA11A}"
 EndProject

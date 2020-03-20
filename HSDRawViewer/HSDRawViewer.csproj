@@ -510,6 +510,10 @@
     <Content Include="dogg.ico" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\BrawlCrate\BrawlLib\BrawlLib.csproj">
+      <Project>{67cb8760-2d66-4ac1-bd54-0d6bb68fa11a}</Project>
+      <Name>BrawlLib</Name>
+    </ProjectReference>
     <ProjectReference Include="..\HSDRaw\HSDRaw.csproj">
       <Project>{ed9126af-8a1e-465d-840a-8754a945414d}</Project>
       <Name>HSDRaw</Name>
