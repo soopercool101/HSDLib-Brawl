@@ -16,7 +16,7 @@ namespace HSDRawViewer.Converters
             CollisionNode c = new CollisionNode();
             foreach (SBM_CollLineGroup g in colldata.LineGroups)
             {
-                CollisionObject obj = new CollisionObject();
+                CollisionObject obj = new CollisionObject {Independent = true};
                 for (int i = g.TopLineIndex; i < g.TopLineCount + g.TopLineIndex; i++)
                 {
                     generateCollision(i, colldata, obj);

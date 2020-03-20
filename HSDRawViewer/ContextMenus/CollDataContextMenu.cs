@@ -1,5 +1,6 @@
 ﻿using HSDRaw.Melee.Gr;
 using System;
+using System.IO;
 using System.Windows.Forms;
 using BrawlLib.SSBB;
 
@@ -32,6 +33,7 @@ namespace HSDRawViewer.ContextMenus
                 using (SaveFileDialog sd = new SaveFileDialog())
                 {
                     sd.Filter = FileFilters.CollisionDef;
+                    sd.FileName = Path.GetFileNameWithoutExtension(MainForm.Instance.FilePath);
 
                     if (sd.ShowDialog() == DialogResult.OK)
                     {
