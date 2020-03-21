@@ -92,7 +92,7 @@ namespace HSDRawViewer.Converters
                     p._material = 0x11;
                     break;
                 case CollMaterial.Basic:
-                case CollMaterial.Glass: // No analagous
+                case CollMaterial.Glass: // No analogous
                 case CollMaterial.Unknown9:
                 case CollMaterial.Unknown11:
                 case CollMaterial.Unknown14:
