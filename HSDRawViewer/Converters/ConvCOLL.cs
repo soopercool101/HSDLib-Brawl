@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using BrawlLib.Internal;
 using BrawlLib.SSBB.ResourceNodes;
 using HSDRaw.Melee.Gr;
+using HSDRawViewer.ContextMenus;
 
 namespace HSDRawViewer.Converters
 {
@@ -19,21 +20,31 @@ namespace HSDRawViewer.Converters
                 CollisionObject obj = new CollisionObject {Independent = true};
                 for (int i = g.TopLineIndex; i < g.TopLineCount + g.TopLineIndex; i++)
                 {
-                    generateCollision(i, colldata, obj);
+                    generateCollision(i, colldata, obj, false);
                 }
                 for (int i = g.BottomLineIndex; i < g.BottomLineCount + g.BottomLineIndex; i++)
                 {
-                    generateCollision(i, colldata, obj);
+                    generateCollision(i, colldata, obj, false);
                 }
                 for (int i = g.LeftLineIndex; i < g.LeftLineCount + g.LeftLineIndex; i++)
                 {
-                    generateCollision(i, colldata, obj);
+                    generateCollision(i, colldata, obj, false);
                 }
                 for (int i = g.RightLineIndex; i < g.RightLineCount + g.RightLineIndex; i++)
                 {
-                    generateCollision(i, colldata, obj);
+                    generateCollision(i, colldata, obj, false);
                 }
                 obj.FixLedges();
+                if (obj._planes.Count > 0)
+                {
+                    c.AddChild(obj);
+                }
+
+                obj = new CollisionObject {Independent = true};
+                for (int i = g.DynamicLineIndex; i < g.DynamicLineCount + g.DynamicLineIndex; i++)
+                {
+                    generateCollision(i, colldata, obj, true);
+                }
                 if (obj._planes.Count > 0)
                 {
                     c.AddChild(obj);
@@ -42,7 +53,7 @@ namespace HSDRawViewer.Converters
             c.Export(filename);
         }
 
-        public static void generateCollision(int index, SBM_Coll_Data colldata, CollisionObject obj)
+        public static void generateCollision(int index, SBM_Coll_Data colldata, CollisionObject obj, bool dynamic)
         {
             SBM_CollLine link = colldata.Links[index];
             Vector2 posL = new Vector2(colldata.Vertices[link.VertexIndex1].X,
@@ -105,21 +116,35 @@ namespace HSDRawViewer.Converters
                     p._material = 0;
                     break;
             }
-            p.IsFloor = (link.CollisionFlag & ~CollPhysics.Top) == 0;
-            p.IsLeftWall = (link.CollisionFlag & ~CollPhysics.Left) == 0;
-            p.IsRightWall = (link.CollisionFlag & ~CollPhysics.Right) == 0;
-            p.IsCeiling = (link.CollisionFlag & ~CollPhysics.Bottom) == 0;
-            p.IsCharacters = true;
-            if (p.IsFloor)
+
+            if (dynamic)
             {
+                p.IsFloor = true;
+                p.IsRotating = true;
+                p.IsCharacters = true;
                 p.IsFallThrough = (link.Flag & ~CollProperty.LedgeGrab) != 0;
                 // Ledges are universal in melee, can be fixed afterwards
                 p.IsLeftLedge = p.IsRightLedge = (link.Flag & ~CollProperty.DropThrough) != 0;
-            }
-
-            if (p.IsWall)
-            {
                 p.IsNoWalljump = (link.Flag & ~CollProperty.LedgeGrab) == 0;
+            }
+            else
+            {
+                p.IsFloor = (link.CollisionFlag & ~CollPhysics.Top) == 0;
+                p.IsLeftWall = (link.CollisionFlag & ~CollPhysics.Left) == 0;
+                p.IsRightWall = (link.CollisionFlag & ~CollPhysics.Right) == 0;
+                p.IsCeiling = (link.CollisionFlag & ~CollPhysics.Bottom) == 0;
+                p.IsCharacters = true;
+                if (p.IsFloor)
+                {
+                    p.IsFallThrough = (link.Flag & ~CollProperty.LedgeGrab) != 0;
+                    // Ledges are universal in melee, can be fixed afterwards
+                    p.IsLeftLedge = p.IsRightLedge = (link.Flag & ~CollProperty.DropThrough) != 0;
+                }
+
+                if (p.IsWall)
+                {
+                    p.IsNoWalljump = (link.Flag & ~CollProperty.LedgeGrab) == 0;
+                }
             }
         }
     }
