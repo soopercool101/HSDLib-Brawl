@@ -24,7 +24,7 @@ deploy:
   prerelease: true
   force_update: true
   on:
-    branch: master
+    branch: BrawlLib-Integration
 
 after_build:
   - 7z a "HSDRAW.zip" "%APPVEYOR_BUILD_FOLDER%\HSDRawViewer\bin\Release\HSDRawViewer.exe"
