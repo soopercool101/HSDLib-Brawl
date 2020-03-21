@@ -34,7 +34,10 @@ namespace HSDRawViewer.Converters
                     generateCollision(i, colldata, obj);
                 }
                 obj.FixLedges();
-                c.AddChild(obj);
+                if (obj._planes.Count > 0)
+                {
+                    c.AddChild(obj);
+                }
             }
             c.Export(filename);
         }
