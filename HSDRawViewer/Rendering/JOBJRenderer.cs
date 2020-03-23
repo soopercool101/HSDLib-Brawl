@@ -7,6 +7,20 @@ using HSDRaw.Common.Animation;
 
 namespace HSDRawViewer.Rendering
 {
+    public enum RenderMode
+    {
+        Default,
+        Normals,
+        VertexColor,
+        UV0,
+        UV1,
+        AmbientColor,
+        DiffuseColor,
+        SpecularColor,
+        ExtColor,
+        DiffusePass,
+        SpecularPass,
+    }
     /// <summary>
     /// 
     /// </summary>
@@ -31,6 +45,8 @@ namespace HSDRawViewer.Rendering
         public DOBJManager DOBJManager = new DOBJManager();
 
         public bool EnableDepth { get; set; } = true;
+
+        public RenderMode RenderMode { get; set; } = RenderMode.Default;
 
         public float ModelScale { get => _modelScale;
             set
@@ -199,11 +215,11 @@ namespace HSDRawViewer.Rendering
         /// <summary>
         /// 
         /// </summary>
-        public void Render(Camera cam)
+        public void Render(Camera camera)
         {
             GL.PushAttrib(AttribMask.AllAttribBits);
 
-            UpdateTransforms(RootJOBJ);
+            UpdateTransforms(RootJOBJ, cam: camera);
 
             GL.Enable(EnableCap.CullFace);
             GL.CullFace(CullFaceMode.Front);
@@ -231,7 +247,7 @@ namespace HSDRawViewer.Rendering
                             if (dobj.Mobj.RenderFlags.HasFlag(RENDER_MODE.XLU))
                                 XLU.Add(new Tuple<HSD_DOBJ, HSD_JOBJ>(dobj, b.Key));
                             else
-                                DOBJManager.RenderDOBJShader(cam, dobj, b.Key, this);
+                                DOBJManager.RenderDOBJShader(camera, dobj, b.Key, this);
                         }
                     }
                 }
@@ -239,20 +255,25 @@ namespace HSDRawViewer.Rendering
                 // render xlu lookups last
                 foreach(var xlu in XLU)
                 {
-                    DOBJManager.RenderDOBJShader(cam, xlu.Item1, xlu.Item2, this);
+                    DOBJManager.RenderDOBJShader(camera, xlu.Item1, xlu.Item2, this);
                 }
 
                 GL.Disable(EnableCap.DepthTest);
 
                 if (DOBJManager.SelectedDOBJ != null && DOBJManager.OutlineSelected)
                 {
-                    DOBJManager.RenderDOBJShader(cam, DOBJManager.SelectedDOBJ, parent, this, true);
+                    DOBJManager.RenderDOBJShader(camera, DOBJManager.SelectedDOBJ, parent, this, true);
                 }
             }
 
+            GL.PopAttrib();
+
+
+            GL.PushAttrib(AttribMask.AllAttribBits);
+
             GL.Disable(EnableCap.Texture2D);
             GL.Disable(EnableCap.DepthTest);
-            // Render Bones
+
             if (RenderBones)
                 foreach (var b in jobjToCache)
                 {
@@ -314,7 +335,7 @@ namespace HSDRawViewer.Rendering
         /// Updates the transforms
         /// </summary>
         /// <param name="root"></param>
-        private void UpdateTransforms(HSD_JOBJ root, JOBJCache parent = null)
+        private void UpdateTransforms(HSD_JOBJ root, JOBJCache parent = null, Camera cam = null)
         {
             if (root == null)
                 return;
@@ -325,8 +346,40 @@ namespace HSDRawViewer.Rendering
 
             var local = CreateLocalTransform(root, index);
             var world = local;
+
             if (parent != null)
                 world = local * parent.WorldTransform;
+
+            if(cam != null && 
+                (root.Flags & (JOBJ_FLAG.BILLBOARD | JOBJ_FLAG.VBILLBOARD | JOBJ_FLAG.HBILLBOARD | JOBJ_FLAG.PBILLBOARD)) != 0)
+            {
+                var pos = Vector3.TransformPosition(Vector3.Zero, world);
+                var campos = (cam.RotationMatrix * new Vector4(cam.Translation, 1)).Xyz;
+
+                if(root.Flags.HasFlag(JOBJ_FLAG.BILLBOARD))
+                    world = Matrix4.LookAt(pos, campos, Vector3.UnitY).Inverted();
+
+                if (root.Flags.HasFlag(JOBJ_FLAG.VBILLBOARD))
+                {
+                    pos.Y = 0;
+                    campos.Y = 0;
+                    world = Matrix4.LookAt(pos, campos, Vector3.UnitY).Inverted();
+                }
+
+                if (root.Flags.HasFlag(JOBJ_FLAG.HBILLBOARD))
+                {
+                    pos.X = 0;
+                    campos.X = 0;
+                    world = Matrix4.LookAt(pos, campos, Vector3.UnitY).Inverted();
+                }
+
+                if (root.Flags.HasFlag(JOBJ_FLAG.RBILLBOARD))
+                {
+                    pos.Z = 0;
+                    campos.Z = 0;
+                    world = Matrix4.LookAt(pos, campos, Vector3.UnitY).Inverted();
+                }
+            }
 
             if (!jobjToCache.ContainsKey(root))
             {
@@ -350,7 +403,7 @@ namespace HSDRawViewer.Rendering
 
             foreach (var child in root.Children)
             {
-                UpdateTransforms(child, jobjToCache[root]);
+                UpdateTransforms(child, jobjToCache[root], cam);
             }
         }
 
