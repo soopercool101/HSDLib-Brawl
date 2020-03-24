@@ -125,7 +125,7 @@ namespace HSDRawViewer.Converters
                 p.IsFallThrough = (link.Flag & ~CollProperty.LedgeGrab) != 0;
                 // Ledges are universal in melee, can be fixed afterwards
                 p.IsLeftLedge = p.IsRightLedge = (link.Flag & ~CollProperty.DropThrough) != 0;
-                p.IsNoWalljump = (link.Flag & ~CollProperty.LedgeGrab) == 0;
+                p.IsNoWalljump = (link.Flag & ~CollProperty.LedgeGrab) != 0;
             }
             else
             {
@@ -143,7 +143,7 @@ namespace HSDRawViewer.Converters
 
                 if (p.IsWall)
                 {
-                    p.IsNoWalljump = (link.Flag & ~CollProperty.LedgeGrab) == 0;
+                    p.IsNoWalljump = (link.Flag & ~CollProperty.LedgeGrab) != 0;
                 }
             }
         }
