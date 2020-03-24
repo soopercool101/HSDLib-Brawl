@@ -107,6 +107,9 @@
     <Compile Include="ContextMenus\FOBJContextMenu.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="ContextMenus\GeneralPointsContextMenu.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="ContextMenus\JOBJContextMenu.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -133,6 +136,7 @@
     </Compile>
     <Compile Include="Converters\ConvCOLL.cs" />
     <Compile Include="Converters\ConvFOBJ.cs" />
+    <Compile Include="Converters\ConvStgPos.cs" />
     <Compile Include="Converters\ConvSVG.cs" />
     <Compile Include="Converters\DAEWriter.cs" />
     <Compile Include="Converters\EmblemConverter.cs" />
