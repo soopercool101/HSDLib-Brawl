@@ -72,7 +72,21 @@ namespace HSDRawViewer.Converters
                         for (int i = 0; i <= 3; i++)
                         {
                             MDL0BoneNode rsE = newBone.Clone();
-                            MDL0BoneNode rsN = newCopy.Clone();
+                            int playerMult = 1;
+                            switch (i)
+                            {
+                                case 1:
+                                    playerMult = -3;
+                                    break;
+                                case 2:
+                                    playerMult = 3;
+                                    break;
+                                case 3:
+                                    playerMult = -1;
+                                    break;
+                            }
+                            rsE.Translation = new Vector3(original.TX * playerMult, original.TY, original.TZ);
+                            MDL0BoneNode rsN = rsE.Clone();
                             rsE.Name = $"Rebirth{i}E";
                             rsN.Name = $"Rebirth{i}N";
                             b.AddChild(rsE);
