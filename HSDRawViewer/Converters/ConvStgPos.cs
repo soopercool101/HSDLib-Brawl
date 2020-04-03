@@ -58,6 +58,16 @@ namespace HSDRawViewer.Converters
                     case PointType.ItemSpawn8:
                     case PointType.ItemSpawn9:
                     case PointType.ItemSpawn10:
+                    case PointType.ItemSpawn11:
+                    case PointType.ItemSpawn12:
+                    case PointType.ItemSpawn13:
+                    case PointType.ItemSpawn14:
+                    case PointType.ItemSpawn15:
+                    case PointType.ItemSpawn16:
+                    case PointType.ItemSpawn17:
+                    case PointType.ItemSpawn18:
+                    case PointType.ItemSpawn19:
+                    case PointType.ItemSpawn20:
                         newBone.Name = $"Item{(int)point.Type - 127}E";
                         newCopy.Name = $"Item{(int)point.Type - 127}N";
                         break;
