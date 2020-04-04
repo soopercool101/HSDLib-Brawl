@@ -17,7 +17,7 @@ namespace HSDRawViewer.ContextMenus
             {
                 using (SaveFileDialog sd = new SaveFileDialog())
                 {
-                    sd.Filter = SupportedFilesHandler.GetCompleteFilter("mdl0");
+                    sd.Filter = FileFilters.MDL0Export;
                     sd.FileName = Path.GetFileNameWithoutExtension(MainForm.Instance.FilePath);
 
                     if (sd.ShowDialog() == DialogResult.OK)
