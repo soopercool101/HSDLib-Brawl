@@ -43,7 +43,7 @@ uniform float alpha;
 
 
 // flags
-uniform int dfNone;
+uniform int no_zupdate;
 uniform int useConstant;
 uniform int useVertexColor;
 uniform int enableDiffuse;
@@ -72,11 +72,17 @@ vec2 GetSphereCoords(vec3 N)
 ///
 vec2 GetCoordType(int coordType, vec2 tex0)
 {
+	//COORD_UV
+
 	//COORD_REFLECTION
 	if(coordType == 1) 
 		return GetSphereCoords(normal);
+		
+	//COORD_HIGHLIGHT
+    //COORD_SHADOW
+    //COORD_TOON
+    //COORD_GRADATION
 
-	//COORD_UV
 	return tex0;
 }
 
@@ -130,28 +136,12 @@ vec4 ColorMap_Pass(vec4 passColor, int operation, int alphaOperation, sampler2D 
 {
 	vec4 pass = MixTextureColor(tex, texCoord, uvTransform, uvscale, coordType, mirrorFix);
 
-	if(operation == 1) // Modulate
-		passColor.rgb *= pass.rgb;
-
-	if(operation == 2) // Replace
-		passColor.rgb = pass.rgb;
-
-	if(operation == 3) // Blend
-		passColor.rgb = mix(passColor.rgb, pass.rgb, blend);//passColor.rgb * (1 - blend) + pass.rgb * blend;
-
-	if(operation == 4) // Add
-		passColor.rgb += pass.rgb;
-
-	if(operation == 5) // Subtract
-		passColor.rgb -= pass.rgb;
-
-	//if(operation == 6) // Pass
-			
-	if(operation == 7 && pass.a != 0) // Alpha Mask
+	
+	if(operation == 1 && pass.a != 0) // Alpha Mask
 		passColor.rgb = pass.rgb;
 		
 	//TODO: I don't know what this is
-	if(operation == 8) // 8 RGB Mask 
+	if(operation == 2) // 8 RGB Mask 
 	{
 		if(pass.r != 0)
 			passColor.r = pass.r;
@@ -167,27 +157,45 @@ vec4 ColorMap_Pass(vec4 passColor, int operation, int alphaOperation, sampler2D 
 			passColor.b = 0;
 	}
 	
+	if(operation == 3) // Blend
+		passColor.rgb = mix(passColor.rgb, pass.rgb, blend);//passColor.rgb * (1 - blend) + pass.rgb * blend;
 
+	if(operation == 4) // Modulate
+		passColor.rgb *= pass.rgb;
+
+	if(operation == 5) // Replace
+		passColor.rgb = pass.rgb;
+
+	//if(operation == 6) // Pass
+
+	if(operation == 7) // Add
+		passColor.rgb += pass.rgb * pass.a;
+
+	if(operation == 8) // Subtract
+		passColor.rgb -= pass.rgb * pass.a;
+			
 	
-	if(alphaOperation == 1) // Modulate
-		passColor.a *= pass.a;
-		
-	if(alphaOperation == 2) // Replace
+	
+	if(alphaOperation == 1 && pass.a != 0) //Alpha Mask
 		passColor.a = pass.a;
 		
-	if(alphaOperation == 3) // Blend
+	if(alphaOperation == 2) // Blend
 		passColor.a = mix(passColor.a, pass.a, blend);
 
-	if(alphaOperation == 4) //Add
+	if(alphaOperation == 3) // Modulate
+		passColor.a *= pass.a;
+
+	if(alphaOperation == 4) // Replace
+		passColor.a = pass.a;
+
+	//if(alphaOperation == 5) //Pass
+		
+	if(alphaOperation == 6) //Add
 		passColor.a += pass.a;
 
-	if(alphaOperation == 5) //Subtract
+	if(alphaOperation == 7) //Subtract
 		passColor.a -= pass.a;
-
-	//if(alphaOperation == 6) //Pass
 	
-	if(alphaOperation == 7 && pass.a != 0) //Alpha Mask
-		passColor.a = pass.a;
 
 	return passColor;
 }
@@ -263,7 +271,7 @@ void main()
 	fragColor.rgb = clamp(fragColor.rgb, ambientPass.rgb * fragColor.rgb, vec3(1));
 
 	vec4 extColor = vec4(1, 1, 1, 1);
-	if(hasTEX0 == 1 && TEX0LightType == 3)
+	if(hasTEX0 == 1 && TEX0LightType == 4)
 	{
 		extColor = ColorMap_Pass(
 		extColor, 
@@ -289,7 +297,7 @@ void main()
 		TEX0MirrorFix,
 		TEX0Blend);
 	}
-	if(hasTEX1 == 1 && TEX1LightType == 3)
+	if(hasTEX1 == 1 && TEX1LightType == 4)
 	{
 		extColor = ColorMap_Pass(
 		extColor, 
@@ -319,7 +327,7 @@ void main()
 	fragColor.a = diffusePass.a;
 
 	if(useVertexColor == 1)
-		fragColor *= vertexColor;
+		fragColor.rgb *= vertexColor.rgb * vertexColor.aaa;
 
 	fragColor.a *= alpha;
 		

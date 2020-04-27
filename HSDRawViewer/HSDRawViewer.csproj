@@ -131,6 +131,9 @@
     <Compile Include="ContextMenus\SelectCharContextMenu.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="ContextMenus\SubactionTableContextMenu.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="ContextMenus\UnidentifiedContextMenu.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -142,12 +145,15 @@
     <Compile Include="Converters\DAEWriter.cs" />
     <Compile Include="Converters\EmblemConverter.cs" />
     <Compile Include="Converters\MayaAnim.cs" />
-    <Compile Include="Converters\MEXFighterConverter.cs" />
+    <Compile Include="Converters\MexCssGenerator.cs" />
+    <Compile Include="Converters\MexFighterConverter.cs" />
     <Compile Include="Converters\MexMapGenerator.cs" />
+    <Compile Include="Converters\MexMenuAnimationGenerator.cs" />
     <Compile Include="Converters\ModelExporter.cs" />
     <Compile Include="Converters\ModelImporter.cs" />
     <Compile Include="Converters\ModeltoCollData.cs" />
     <Compile Include="Converters\MOTLoader.cs" />
+    <Compile Include="Converters\OutlineGenerator.cs" />
     <Compile Include="Converters\PlayStruct.cs" />
     <Compile Include="Converters\TOBJConverter.cs" />
     <Compile Include="DataNode.cs" />
@@ -206,6 +212,55 @@
     <Compile Include="GUI\KeyEditor.Designer.cs">
       <DependentUpon>KeyEditor.cs</DependentUpon>
     </Compile>
+    <Compile Include="GUI\MEX\Controls\MEXMenuCSSControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="GUI\MEX\Controls\MEXMenuCSSControl.Designer.cs">
+      <DependentUpon>MEXMenuCSSControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="GUI\MEX\Controls\MEXEffectControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="GUI\MEX\Controls\MEXEffectControl.Designer.cs">
+      <DependentUpon>MEXEffectControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="GUI\MEX\Controls\MEXFighterControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="GUI\MEX\Controls\MEXFighterControl.Designer.cs">
+      <DependentUpon>MEXFighterControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="GUI\MEX\Controls\MEXItemControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="GUI\MEX\Controls\MEXItemControl.Designer.cs">
+      <DependentUpon>MEXItemControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="GUI\MEX\Controls\MEXMenuControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="GUI\MEX\Controls\MEXMenuControl.Designer.cs">
+      <DependentUpon>MEXMenuControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="GUI\MEX\Controls\MEXMenuSSSControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="GUI\MEX\Controls\MEXMenuSSSControl.Designer.cs">
+      <DependentUpon>MEXMenuSSSControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="GUI\MEX\Controls\MEXMusicControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="GUI\MEX\Controls\MEXMusicControl.Designer.cs">
+      <DependentUpon>MEXMusicControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="GUI\MEX\Controls\MEXStageControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="GUI\MEX\Controls\MEXStageControl.Designer.cs">
+      <DependentUpon>MEXStageControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="GUI\MEX\IMEXControl.cs" />
     <Compile Include="GUI\Plugins\AOBJEditor.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -232,6 +287,7 @@
       <DependentUpon>JOBJEditor.cs</DependentUpon>
     </Compile>
     <Compile Include="GUI\Plugins\Melee\CollDataItems.cs" />
+    <Compile Include="GUI\Plugins\Melee\DummyThrowModel.cs" />
     <Compile Include="GUI\Plugins\Melee\HurtBoxEditor.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -239,22 +295,22 @@
       <DependentUpon>HurtBoxEditor.cs</DependentUpon>
     </Compile>
     <Compile Include="GUI\Plugins\Melee\SubactionProcessor.cs" />
-    <Compile Include="GUI\Plugins\MEX\MEXCSSIconEntry.cs" />
-    <Compile Include="GUI\Plugins\MEX\DefaultItemNames.cs" />
-    <Compile Include="GUI\Plugins\MEX\ExpandedSSM.cs" />
-    <Compile Include="GUI\Plugins\MEX\FighterPackageInstaller.cs" />
-    <Compile Include="GUI\Plugins\MEX\FighterPackageUninstaller.cs" />
-    <Compile Include="GUI\Plugins\MEX\MEXConverters.cs" />
-    <Compile Include="GUI\Plugins\MEX\MexDataEditor.cs">
+    <Compile Include="GUI\MEX\Entries\MEXCSSIconEntry.cs" />
+    <Compile Include="GUI\MEX\DefaultItemNames.cs" />
+    <Compile Include="GUI\MEX\Entries\MEXEffectEntry.cs" />
+    <Compile Include="GUI\MEX\Tools\FighterPackageInstaller.cs" />
+    <Compile Include="GUI\MEX\Tools\FighterPackageUninstaller.cs" />
+    <Compile Include="GUI\MEX\Tools\MEXConverters.cs" />
+    <Compile Include="GUI\MEX\MexDataEditor.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="GUI\Plugins\MEX\MexDataEditor.Designer.cs">
+    <Compile Include="GUI\MEX\MexDataEditor.Designer.cs">
       <DependentUpon>MexDataEditor.cs</DependentUpon>
     </Compile>
-    <Compile Include="GUI\Plugins\MEX\MEXFighterEntry.cs" />
-    <Compile Include="GUI\Plugins\MEX\MEXPlaylistEntry.cs" />
-    <Compile Include="GUI\Plugins\MEX\MEXStageEntry.cs" />
-    <Compile Include="GUI\Plugins\MEX\MEXStageIconEntry.cs" />
+    <Compile Include="GUI\MEX\Entries\MEXFighterEntry.cs" />
+    <Compile Include="GUI\MEX\Entries\MEXPlaylistEntry.cs" />
+    <Compile Include="GUI\MEX\Entries\MEXStageEntry.cs" />
+    <Compile Include="GUI\MEX\Entries\MEXStageIconEntry.cs" />
     <Compile Include="GUI\ProgressBarDisplay.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -307,6 +363,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RawHSD.cs" />
+    <Compile Include="Rendering\AnimationTrack.cs" />
     <Compile Include="Rendering\Camera.cs" />
     <Compile Include="Rendering\DOBJRenderer.cs" />
     <Compile Include="Rendering\Renderers\HurtboxRenderer.cs" />
@@ -398,6 +455,30 @@
     <EmbeddedResource Include="GUI\KeyEditor.resx">
       <DependentUpon>KeyEditor.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="GUI\MEX\Controls\MEXEffectControl.resx">
+      <DependentUpon>MEXEffectControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="GUI\MEX\Controls\MEXFighterControl.resx">
+      <DependentUpon>MEXFighterControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="GUI\MEX\Controls\MEXItemControl.resx">
+      <DependentUpon>MEXItemControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="GUI\MEX\Controls\MEXMenuControl.resx">
+      <DependentUpon>MEXMenuControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="GUI\MEX\Controls\MEXMenuCSSControl.resx">
+      <DependentUpon>MEXMenuCSSControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="GUI\MEX\Controls\MEXMenuSSSControl.resx">
+      <DependentUpon>MEXMenuSSSControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="GUI\MEX\Controls\MEXMusicControl.resx">
+      <DependentUpon>MEXMusicControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="GUI\MEX\Controls\MEXStageControl.resx">
+      <DependentUpon>MEXStageControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="GUI\Plugins\AOBJEditor.resx">
       <DependentUpon>AOBJEditor.cs</DependentUpon>
     </EmbeddedResource>
@@ -413,7 +494,7 @@
     <EmbeddedResource Include="GUI\Plugins\Melee\HurtBoxEditor.resx">
       <DependentUpon>HurtBoxEditor.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="GUI\Plugins\MEX\MexDataEditor.resx">
+    <EmbeddedResource Include="GUI\MEX\MexDataEditor.resx">
       <DependentUpon>MexDataEditor.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="GUI\ProgressBarDisplay.resx">
@@ -527,6 +608,7 @@
       <Name>HSDRaw</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <ItemDefinitionGroup>
     <ReferenceCopyLocalPaths>
       <DestinationSubDirectory>lib\</DestinationSubDirectory>

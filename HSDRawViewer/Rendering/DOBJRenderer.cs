@@ -47,6 +47,7 @@ namespace HSDRawViewer.Rendering
         {
             public POBJ_FLAG Flag;
 
+            public int EnvelopeCount = 0;
             public Vector4[] Envelopes = new Vector4[10];
             public Vector4[] Weights = new Vector4[10];
 
@@ -134,6 +135,8 @@ namespace HSDRawViewer.Rendering
             if (parentJOBJ != null && jobjManager != null)
                 single = jobjManager.GetWorldTransform(parentJOBJ);
             GL.UniformMatrix4(GXShader.GetVertexAttributeUniformLocation("singleBind"), false, ref single);
+
+            GXShader.SetBoolToInt("isSkeleton", parentJOBJ.Flags.HasFlag(JOBJ_FLAG.SKELETON_ROOT) || parentJOBJ.Flags.HasFlag(JOBJ_FLAG.SKELETON));
             
             GXShader.SetWorldTransformBones(jobjManager.GetWorldTransforms());
             //GXShader.SetBindTransformBones(jobjManager.GetBindTransforms());
@@ -184,21 +187,29 @@ namespace HSDRawViewer.Rendering
                 GL.Uniform4(GXShader.GetVertexAttributeUniformLocation("weights"), p.Weights.Length, ref p.Weights[0].X);
                 
                 GXShader.SetBoolToInt("hasEnvelopes", p.HasWeighting);
-                GXShader.SetBoolToInt("enableParentTransform", !p.Flag.HasFlag(POBJ_FLAG.PARENTTRANSFORM));
+                GXShader.SetBoolToInt("enableParentTransform", !p.Flag.HasFlag(POBJ_FLAG.UNKNOWN0));
+                //GXShader.SetInt("envelopeCount", p.EnvelopeCount);
 
                 GL.Enable(EnableCap.CullFace);
                 if (selected)
+                {
                     GL.PolygonMode(MaterialFace.Back, PolygonMode.Line);
+                }
                 else
                 if (p.Flag.HasFlag(POBJ_FLAG.CULLFRONT))
+                {
+                    GL.CullFace(CullFaceMode.Front);
                     GL.PolygonMode(MaterialFace.Front, PolygonMode.Fill);
+                }
                 else
                 if (p.Flag.HasFlag(POBJ_FLAG.CULLBACK))
+                {
+                    GL.CullFace(CullFaceMode.Back);
                     GL.PolygonMode(MaterialFace.Back, PolygonMode.Fill);
+                }
                 else
                 {
                     GL.Disable(EnableCap.CullFace);
-                    //GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
                 }
 
                 foreach (var dl in p.DisplayLists)
@@ -256,6 +267,7 @@ namespace HSDRawViewer.Rendering
                     pobjCache.Weights[eni] = w;
                     pobjCache.Envelopes[eni] = b;
                     eni++;
+                    pobjCache.EnvelopeCount = v.EnvelopeCount;
                     pobjCache.HasWeighting = v.EnvelopeCount > 0;
                 }
 
@@ -329,7 +341,7 @@ namespace HSDRawViewer.Rendering
 
             var enableAll = mobj.RenderFlags.HasFlag(RENDER_MODE.DF_ALL);
 
-            shader.SetBoolToInt("dfNone", mobj.RenderFlags.HasFlag(RENDER_MODE.DF_NONE));
+            shader.SetBoolToInt("no_zupdate", mobj.RenderFlags.HasFlag(RENDER_MODE.NO_ZUPDATE));
             shader.SetBoolToInt("enableSpecular", parentJOBJ.Flags.HasFlag(JOBJ_FLAG.SPECULAR) && mobj.RenderFlags.HasFlag(RENDER_MODE.SPECULAR));
             shader.SetBoolToInt("enableDiffuse", parentJOBJ.Flags.HasFlag(JOBJ_FLAG.LIGHTING) && mobj.RenderFlags.HasFlag(RENDER_MODE.DIFFUSE));
             shader.SetBoolToInt("useConstant", mobj.RenderFlags.HasFlag(RENDER_MODE.CONSTANT));
@@ -369,6 +381,7 @@ namespace HSDRawViewer.Rendering
                     {
                         imageBufferTextureIndex.Add(tex.ImageData.ImageData, TextureManager.TextureCount);
                         TextureManager.Add(tex.GetDecodedImageData(), tex.ImageData.Width, tex.ImageData.Height);
+                        continue;
                     }
 
                     var texid = TextureManager.Get(imageBufferTextureIndex[tex.ImageData.ImageData]);
@@ -386,54 +399,22 @@ namespace HSDRawViewer.Rendering
                     var mirrorY = tex.WrapT == GXWrapMode.MIRROR;
 
                     var flags = tex.Flags;
-
-                    int coordType = 0; // coord UV
-                    if (flags.HasFlag(TOBJ_FLAGS.COORD_REFLECTION))
-                        coordType = 1;
-
+                    
                     var lightType = 0; // ambient
                     if (flags.HasFlag(TOBJ_FLAGS.LIGHTMAP_DIFFUSE))
                         lightType = 1;
                     if (flags.HasFlag(TOBJ_FLAGS.LIGHTMAP_SPECULAR))
                         lightType = 2;
-                    if (flags.HasFlag(TOBJ_FLAGS.LIGHTMAP_EXT))
+                    if (flags.HasFlag(TOBJ_FLAGS.LIGHTMAP_AMBIENT))
                         lightType = 3;
-                    if (flags.HasFlag(TOBJ_FLAGS.LIGHTMAP_SHADOW))
+                    if (flags.HasFlag(TOBJ_FLAGS.LIGHTMAP_EXT))
                         lightType = 4;
+                    if (flags.HasFlag(TOBJ_FLAGS.LIGHTMAP_SHADOW))
+                        lightType = 5;
 
-                    int colorOP = 0; // NONE
-                    if (flags.HasFlag(TOBJ_FLAGS.COLORMAP_MODULATE))
-                        colorOP = 1;
-                    if (flags.HasFlag(TOBJ_FLAGS.COLORMAP_REPLACE))
-                        colorOP = 2;
-                    if (flags.HasFlag(TOBJ_FLAGS.COLORMAP_BLEND))
-                        colorOP = 3;
-                    if (flags.HasFlag(TOBJ_FLAGS.COLORMAP_ADD))
-                        colorOP = 4;
-                    if (flags.HasFlag(TOBJ_FLAGS.COLORMAP_SUB))
-                        colorOP = 5;
-                    if (flags.HasFlag(TOBJ_FLAGS.COLORMAP_PASS))
-                        colorOP = 6;
-                    if (flags.HasFlag(TOBJ_FLAGS.COLORMAP_ALPHA_MASK))
-                        colorOP = 7;
-                    if (flags.HasFlag(TOBJ_FLAGS.COLORMAP_RGB_MASK))
-                        colorOP = 8;
-
-                    int alphaOP = 0; // NONE
-                    if (flags.HasFlag(TOBJ_FLAGS.ALPHAMAP_MODULATE))
-                        alphaOP = 1;
-                    if (flags.HasFlag(TOBJ_FLAGS.ALPHAMAP_REPLACE))
-                        alphaOP = 2;
-                    if (flags.HasFlag(TOBJ_FLAGS.ALPHAMAP_BLEND))
-                        alphaOP = 3;
-                    if (flags.HasFlag(TOBJ_FLAGS.ALPHAMAP_ADD))
-                        alphaOP = 4;
-                    if (flags.HasFlag(TOBJ_FLAGS.ALPHAMAP_SUB))
-                        alphaOP = 5;
-                    if (flags.HasFlag(TOBJ_FLAGS.ALPHAMAP_PASS))
-                        alphaOP = 6;
-                    if (flags.HasFlag(TOBJ_FLAGS.ALPHAMAP_ALPHA_MASK))
-                        alphaOP = 7;
+                    int coordType = (int)flags & 0xF;
+                    int colorOP = ((int)flags >> 16) & 0xF;
+                    int alphaOP = ((int)flags >> 20) & 0xF;
 
                     var transform = Matrix4.CreateScale(tex.SX, tex.SY, tex.SZ) *
                         Matrix4.CreateFromQuaternion(Math3D.FromEulerAngles(tex.RZ, tex.RY, tex.RX)) *

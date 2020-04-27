@@ -49,6 +49,8 @@ namespace HSDRawViewer.Rendering
 
         public RenderMode RenderMode { get; set; } = RenderMode.Default;
 
+        public int JointCount { get => jobjToCache.Count; }
+
         public float ModelScale { get => _modelScale;
             set
             {
@@ -67,10 +69,30 @@ namespace HSDRawViewer.Rendering
             public Matrix4 InvertedTransform;
             public Matrix4 BindTransform;
 
+            public bool SkipWorldUpdate = false;
+
             public int Index;
         }
 
         private Dictionary<HSD_JOBJ, JOBJCache> jobjToCache = new Dictionary<HSD_JOBJ, JOBJCache>();
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="index"></param>
+        /// <param name="transform"></param>
+        public void SetWorldTransform(int index, Matrix4 transform)
+        {
+            foreach (var v in jobjToCache)
+                if (v.Value.Index == index)
+                {
+                    v.Value.SkipWorldUpdate = true;
+                    v.Value.WorldTransform = transform;
+                    UpdateNoRender();
+                    v.Value.SkipWorldUpdate = false;
+                    break;
+                }
+        }
 
         /// <summary>
         /// Gets the world transform from the bone index
@@ -216,11 +238,27 @@ namespace HSDRawViewer.Rendering
         /// <summary>
         /// 
         /// </summary>
-        public void Render(Camera camera)
+        public void RecalculateInverseBinds()
+        {
+            var anim = Animation;
+            Animation = null;
+            UpdateNoRender();
+            Animation = anim;
+            foreach(var v in jobjToCache)
+            {
+                v.Key.InverseWorldTransform = TKMatixToHSDMatrix(v.Value.WorldTransform.Inverted());
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void Render(Camera camera, bool update = true)
         {
             GL.PushAttrib(AttribMask.AllAttribBits);
 
-            UpdateTransforms(RootJOBJ, cam: camera);
+            if(update)
+                UpdateTransforms(RootJOBJ, cam: camera);
 
             GL.Enable(EnableCap.CullFace);
             GL.CullFace(CullFaceMode.Front);
@@ -406,7 +444,8 @@ namespace HSDRawViewer.Rendering
             var cache = jobjToCache[root];
 
             cache.LocalTransform = local;
-            cache.WorldTransform = world;
+            if(!cache.SkipWorldUpdate)
+                cache.WorldTransform = world;
             cache.BindTransform = cache.InvertedTransform * world;
 
             foreach (var child in root.Children)
@@ -528,13 +567,37 @@ namespace HSDRawViewer.Rendering
         /// <param name="Y"></param>
         /// <param name="Z"></param>
         /// <returns></returns>
-        private static Matrix4 HSDMatrixToTKMatrix(HSD_Matrix4x3 mat)
+        public static Matrix4 HSDMatrixToTKMatrix(HSD_Matrix4x3 mat)
         {
             return new Matrix4(
                 mat.M11, mat.M21, mat.M31, 0,
                 mat.M12, mat.M22, mat.M32, 0,
                 mat.M13, mat.M23, mat.M33, 0,
                 mat.M14, mat.M24, mat.M34, 1);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="mat"></param>
+        /// <returns></returns>
+        public static HSD_Matrix4x3 TKMatixToHSDMatrix(Matrix4 mat)
+        {
+            return new HSD_Matrix4x3()
+            {
+                M11 = mat.M11,
+                M21 = mat.M12,
+                M31 = mat.M13,
+                M12 = mat.M21,
+                M22 = mat.M22,
+                M32 = mat.M23,
+                M13 = mat.M31,
+                M23 = mat.M32,
+                M33 = mat.M33,
+                M14 = mat.M41,
+                M24 = mat.M42,
+                M34 = mat.M43,
+            };
         }
 
         #endregion

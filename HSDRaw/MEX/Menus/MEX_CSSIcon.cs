@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
 
-namespace HSDRaw.MEX
+namespace HSDRaw.MEX.Menus
 {
     public enum Status
     {
@@ -14,7 +14,7 @@ namespace HSDRaw.MEX
         public override int TrimmedSize => 0x1C;
 
         [DisplayName("Unknown Char ID"), Description("")]
-        public byte CharUNKID { get => _s.GetByte(0x00); set => _s.SetByte(0x00, value); }
+        public byte CSPLookupIndex { get => _s.GetByte(0x00); set => _s.SetByte(0x00, value); }
 
         [DisplayName("External Char ID"), Description("")]
         public byte ExternalCharID { get => _s.GetByte(0x01); set => _s.SetByte(0x01, value); }
@@ -40,12 +40,12 @@ namespace HSDRaw.MEX
         [DisplayName("X2"), Description("")]
         public float X2 { get => _s.GetFloat(0x10); set => _s.SetFloat(0x10, value); }
 
-        [DisplayName("Y1"), Description("")]
-        public float Y1 { get => _s.GetFloat(0x14); set => _s.SetFloat(0x14, value); }
-
         [DisplayName("Y2"), Description("")]
-        public float Y2 { get => _s.GetFloat(0x18); set => _s.SetFloat(0x18, value); }
+        public float Y2 { get => _s.GetFloat(0x14); set => _s.SetFloat(0x14, value); }
 
+        [DisplayName("Y1"), Description("")]
+        public float Y1 { get => _s.GetFloat(0x18); set => _s.SetFloat(0x18, value); }
+        
         public override string ToString()
         {
             return $"{ExternalCharID} - ({X1}, {Y1}, {X2}, {Y2})";

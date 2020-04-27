@@ -12,6 +12,7 @@ using HSDRaw.Melee.Ef;
 using HSDRaw.Melee;
 using HSDRaw.MEX;
 using HSDRaw.MEX.Stages;
+using HSDRaw.MEX.Menus;
 
 namespace HSDRawViewer
 {
@@ -272,7 +273,8 @@ namespace HSDRawViewer
         /// </summary>
         public void Export()
         {
-            var f = Tools.FileIO.SaveFile("HSD (*.dat)|*.dat");
+            var f = Tools.FileIO.SaveFile("HSD (*.dat)|*.dat", Text + ".dat");
+            
             if (f != null)
             {
                 HSDRawFile r = new HSDRawFile();

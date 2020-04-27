@@ -16,6 +16,7 @@ out vec4 vertexColor;
 
 uniform mat4 mvp;
 
+uniform int isSkeleton;
 uniform int enableParentTransform;
 uniform mat4 singleBind;
 
@@ -38,7 +39,7 @@ void main()
 	
 	normal = GX_VA_NRM;
 
-	if(enableParentTransform == 1)
+	if(enableParentTransform == 1) // todo maybe not accurate
 	{
 		pos = singleBind * pos;
 		normal = (inverse(transpose(singleBind)) * vec4(normal, 1)).xyz;
@@ -48,7 +49,7 @@ void main()
 	{
 		int matrixIndex = int(PNMTXIDX / 3);
 		
-		if(weights[matrixIndex].x == 1)
+		if(isSkeleton == 1 && weights[matrixIndex].x == 1)
 		{
 			pos = transforms[int(envelopeIndex[matrixIndex].x)] * vec4(pos.xyz, 1);
 			normal = (inverse(transpose(transforms[int(envelopeIndex[matrixIndex].x)])) * vec4(normal, 1)).xyz;

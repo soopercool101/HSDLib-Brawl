@@ -109,6 +109,8 @@ namespace HSDRawViewer.GUI
         public bool EnableCrossHair = false;
         private Vector3 CrossHair = new Vector3();
 
+        public bool IsPlaying { get => (buttonPlay.Text == "Pause"); }
+
         public bool EnableFloor { get; set; } = false;
 
         public ViewportControl()
@@ -194,14 +196,15 @@ namespace HSDRawViewer.GUI
                 var keyState = Keyboard.GetState();
 
                 if (keyState.IsKeyDown(Key.ControlLeft) || keyState.IsKeyDown(Key.ControlRight))
-                {
                     Selecting = true;
-                }
+
                 mouseStart = new Vector2(args.X, args.Y);
             };
 
             panel1.MouseMove += (sender, args) =>
             {
+                mouseEnd = new Vector2(args.X, args.Y);
+
                 var p = panel1.PointToClient(Cursor.Position);
                 var point = new Vector2(p.X, p.Y);
                 

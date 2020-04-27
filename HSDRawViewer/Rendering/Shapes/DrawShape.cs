@@ -10,6 +10,27 @@ namespace HSDRawViewer.Rendering
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="start"></param>
+        /// <param name="end"></param>
+        /// <param name="color"></param>
+        /// <param name="thickness"></param>
+        public static void Line(Vector3 start, Vector3 end, Vector4 color, float thickness)
+        {
+            GL.PushAttrib(AttribMask.AllAttribBits);
+
+            GL.Color4(color);
+            GL.LineWidth(thickness);
+            GL.Begin(PrimitiveType.Lines);
+            GL.Vertex3(start);
+            GL.Vertex3(end);
+            GL.End();
+
+            GL.PopAttrib();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         public static void Floor()
         {
             GL.PushAttrib(AttribMask.AllAttribBits);
@@ -32,6 +53,24 @@ namespace HSDRawViewer.Rendering
 
             GL.End();
             GL.PopAttrib();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="x2"></param>
+        /// <param name="y2"></param>
+        /// <param name="c"></param>
+        public static void DrawRectangle(RectangleF rect, Color c)
+        {
+            DrawRectangle(rect.X, rect.Y, rect.X + rect.Width, rect.Y + rect.Height, 0, 1, c);
+        }
+
+        public static void DrawRectangle(RectangleF rect, float thickNess, Color c)
+        {
+            DrawRectangle(rect.X, rect.Y, rect.X + rect.Width, rect.Y + rect.Height, 0, thickNess, c);
         }
 
         /// <summary>
@@ -78,10 +117,10 @@ namespace HSDRawViewer.Rendering
             GL.Color4(c);
             GL.Begin(PrimitiveType.Quads);
 
-            GL.Vertex3(x, y, z);
-            GL.Vertex3(x2, y, z);
-            GL.Vertex3(x2, y2, z);
             GL.Vertex3(x, y2, z);
+            GL.Vertex3(x2, y2, z);
+            GL.Vertex3(x2, y, z);
+            GL.Vertex3(x, y, z);
 
             GL.End();
 
@@ -89,10 +128,10 @@ namespace HSDRawViewer.Rendering
             GL.Color4(1f, 1f, 1f, 1f);
             GL.Begin(PrimitiveType.LineLoop);
 
-            GL.Vertex3(x, y, z);
-            GL.Vertex3(x2, y, z);
-            GL.Vertex3(x2, y2, z);
             GL.Vertex3(x, y2, z);
+            GL.Vertex3(x2, y2, z);
+            GL.Vertex3(x2, y, z);
+            GL.Vertex3(x, y, z);
 
             GL.End();
             GL.PopAttrib();
