@@ -21,6 +21,7 @@ namespace HSDRawViewer.Rendering
         ExtColor,
         DiffusePass,
         SpecularPass,
+        BoneWeight,
     }
     /// <summary>
     /// 
@@ -50,6 +51,8 @@ namespace HSDRawViewer.Rendering
         public RenderMode RenderMode { get; set; } = RenderMode.Default;
 
         public int JointCount { get => jobjToCache.Count; }
+
+        public bool RefreshRendering = false;
 
         public float ModelScale { get => _modelScale;
             set
@@ -179,6 +182,9 @@ namespace HSDRawViewer.Rendering
         /// <returns></returns>
         public int IndexOf(HSD_JOBJ jobj)
         {
+            if (jobj == null)
+                return -1;
+
             if (jobjToCache.ContainsKey(jobj))
                 return jobjToCache[jobj].Index;
             else
@@ -218,10 +224,19 @@ namespace HSDRawViewer.Rendering
         /// <summary>
         /// 
         /// </summary>
-        public void ClearRenderingCache()
+        public void CleanupRendering()
+        {
+            ClearRenderingCache();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void ClearRenderingCache()
         {
             jobjToCache.Clear();
             DOBJManager.ClearRenderingCache();
+            RefreshRendering = false;
         }
 
         /// <summary>
@@ -255,6 +270,9 @@ namespace HSDRawViewer.Rendering
         /// </summary>
         public void Render(Camera camera, bool update = true)
         {
+            if (RefreshRendering)
+                ClearRenderingCache();
+
             GL.PushAttrib(AttribMask.AllAttribBits);
 
             if(update)
@@ -273,9 +291,12 @@ namespace HSDRawViewer.Rendering
             if (RenderObjects)
             {
                 HSD_JOBJ parent = null;
-                List<Tuple<HSD_DOBJ, HSD_JOBJ>> XLU = new List<Tuple<HSD_DOBJ, HSD_JOBJ>>();
+                List<Tuple<HSD_DOBJ, HSD_JOBJ, int, int>> XLU = new List<Tuple<HSD_DOBJ, HSD_JOBJ, int, int>>();
+                MatAnimation.Frame = Frame;
+                MatAnimation.JOBJIndex = 0;
                 foreach (var b in jobjToCache)
                 {
+                    MatAnimation.DOBJIndex = 0;
                     if (b.Key.Dobj != null)
                     {
                         foreach (var dobj in b.Key.Dobj.List)
@@ -284,24 +305,29 @@ namespace HSDRawViewer.Rendering
                                 parent = b.Key;
 
                             if (dobj.Mobj.RenderFlags.HasFlag(RENDER_MODE.XLU))
-                                XLU.Add(new Tuple<HSD_DOBJ, HSD_JOBJ>(dobj, b.Key));
+                                XLU.Add(new Tuple<HSD_DOBJ, HSD_JOBJ, int, int>(dobj, b.Key, MatAnimation.JOBJIndex, MatAnimation.DOBJIndex));
                             else
-                                DOBJManager.RenderDOBJShader(camera, dobj, b.Key, this);
+                                DOBJManager.RenderDOBJShader(camera, dobj, b.Key, this, MatAnimation);
+
+                            MatAnimation.DOBJIndex++;
                         }
                     }
+                    MatAnimation.JOBJIndex++;
                 }
 
                 // render xlu lookups last
                 foreach(var xlu in XLU)
                 {
-                    DOBJManager.RenderDOBJShader(camera, xlu.Item1, xlu.Item2, this);
+                    MatAnimation.JOBJIndex = xlu.Item3;
+                    MatAnimation.DOBJIndex = xlu.Item4;
+                    DOBJManager.RenderDOBJShader(camera, xlu.Item1, xlu.Item2, this, MatAnimation);
                 }
 
                 GL.Disable(EnableCap.DepthTest);
 
                 if (DOBJManager.SelectedDOBJ != null && DOBJManager.OutlineSelected)
                 {
-                    DOBJManager.RenderDOBJShader(camera, DOBJManager.SelectedDOBJ, parent, this, true);
+                    DOBJManager.RenderDOBJShader(camera, DOBJManager.SelectedDOBJ, parent, this, null, true);
                 }
             }
 
@@ -507,7 +533,19 @@ namespace HSDRawViewer.Rendering
 
         #region Animation Loader
 
-        public AnimManager Animation = new AnimManager();
+        public JointAnimManager Animation = new JointAnimManager();
+        public MatAnimManager MatAnimation = new MatAnimManager();
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="joint"></param>
+        public void SetMatAnimJoint(HSD_MatAnimJoint joint)
+        {
+            RefreshRendering = true;
+            MatAnimation = new MatAnimManager();
+            MatAnimation.FromMatAnim(joint);
+        }
 
         /// <summary>
         /// 
@@ -515,7 +553,7 @@ namespace HSDRawViewer.Rendering
         /// <param name="joint"></param>
         public void SetAnimJoint(HSD_AnimJoint joint)
         {
-            Animation = new AnimManager();
+            Animation = new JointAnimManager();
             Animation.FromAnimJoint(joint);
         }
 
@@ -524,7 +562,7 @@ namespace HSDRawViewer.Rendering
         /// </summary>
         public void SetFigaTree(HSD_FigaTree tree)
         {
-            Animation = new AnimManager();
+            Animation = new JointAnimManager();
             Animation.FromFigaTree(tree);
         }
 
@@ -533,8 +571,8 @@ namespace HSDRawViewer.Rendering
         /// </summary>
         public void SetMOT(short[] jointTable, MOT_FILE file)
         {
-            Animation = new AnimManager();
-            Animation.SetMOT(jointTable, file);
+            Animation = new MotAnimManager();
+            ((MotAnimManager)Animation).SetMOT(jointTable, file);
         }
 
 
