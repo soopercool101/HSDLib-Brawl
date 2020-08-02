@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Text;
+using System.Linq;
 using System.Windows.Forms;
 using HSDRaw.MEX;
 using HSDRaw;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 using System.IO;
+using HSDRawViewer.Tools;
+using HSDRawViewer.GUI.MEX.Tools;
 
 namespace HSDRawViewer.GUI.MEX.Controls
 {
@@ -58,7 +61,27 @@ namespace HSDRawViewer.GUI.MEX.Controls
 
             mexItemEditor.OnItemRemove += (args) =>
             {
-                MexDataEditor.FighterControl.RemoveItem(MEXItemOffset + args.Index);
+                var index = MEXItemOffset + args.Index;
+
+                foreach (var v in MexDataEditor.FighterControl.FighterEntries)
+                {
+                    foreach (var s in v.MEXItems)
+                    {
+                        if (s.Value == index) s.Value = 0;
+                        if (s.Value > index) s.Value -= 1;
+                    }
+                }
+
+                foreach (var stage in MexDataEditor.StageControl.StageEntries)
+                {
+                    var items = stage.Items;
+                    foreach (var f in items)
+                    {
+                        if (f.Value == index) f.Value -= 1;
+                        if (f.Value > index) f.Value -= 1;
+                    }
+                    stage.Items = items;
+                }
             };
             
             commonItemEditor.TextOverrides.AddRange(DefaultItemNames.CommonItemNames);
@@ -98,7 +121,7 @@ namespace HSDRawViewer.GUI.MEX.Controls
             pokemonItemEditor.ItemIndexOffset = MEXItemOffset;
             MEXItemOffset += ItemPokemon.Length;
 
-            ItemStage = data.ItemTable.Stages.Array;
+            ItemStage = data.ItemTable.StageItems.Array;
             stageItemEditor.SetArrayFromProperty(this, "ItemStage");
             stageItemEditor.ItemIndexOffset = MEXItemOffset;
             MEXItemOffset += ItemStage.Length;
@@ -117,9 +140,9 @@ namespace HSDRawViewer.GUI.MEX.Controls
             data.ItemTable.CommonItems.Array = ItemCommon;
             data.ItemTable.FighterItems.Array = ItemFighter;
             data.ItemTable.Pokemon.Array = ItemPokemon;
-            data.ItemTable.Stages.Array = ItemStage;
+            data.ItemTable.StageItems.Array = ItemStage;
             data.ItemTable.MEXItems.Array = ItemMEX;
-            data.ItemTable._s.GetCreateReference<HSDAccessor>(0x18)._s.Resize(Math.Max(4, ItemMEX.Length * 4));
+            data.ItemTable._s.GetCreateReference<HSDAccessor>(0x14)._s.Resize(Math.Max(4, ItemMEX.Length * 4));
         }
 
 
@@ -148,22 +171,30 @@ namespace HSDRawViewer.GUI.MEX.Controls
         /// <returns>added mex item id</returns>
         public int AddMEXItem(MEX_Item item)
         {
-            mexItemEditor.AddItem(item);
-
-            return MEXItemOffset + ItemMEX.Length - 1;
+            return mexItemEditor.AddItem(item);
         }
 
         /// <summary>
-        /// 
+        /// Only removes item if there are no dependencies
         /// </summary>
         /// <returns></returns>
-        public void RemoveMEXItem(int index)
+        public bool SaveRemoveMexItem(int index)
         {
             // only remove if index is in range of mex item
             if (index < MEXItemOffset)
-                return;
+                return false;
 
+            // check if used
+            var fighterUsing = MexDataEditor.FighterControl.ItemInUse(index);
+            var stageUsing = MexDataEditor.StageControl.StageEntries.Any(e => e.Items.Any(r => r.Value == index));
+
+            if (fighterUsing || stageUsing)
+                return false;
+
+            // remove item
             mexItemEditor.RemoveAt(index - MEXItemOffset);
+
+            return true;
         }
 
         /// <summary>
@@ -198,17 +229,7 @@ namespace HSDRawViewer.GUI.MEX.Controls
         }
 
         #region Events
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void saveItemButton_Click(object sender, EventArgs e)
-        {
-            SaveData(MexData);
-        }
-
+        
         /// <summary>
         /// 
         /// </summary>
@@ -229,11 +250,38 @@ namespace HSDRawViewer.GUI.MEX.Controls
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        public MEX_Item GetItem(int index)
+        {
+            var item = commonItemEditor.GetItemAt(index);
+
+            if (item == null)
+                item = fighterItemEditor.GetItemAt(index);
+
+            if (item == null)
+                item = pokemonItemEditor.GetItemAt(index);
+
+            if (item == null)
+                item = stageItemEditor.GetItemAt(index);
+
+            if (item == null)
+                item = mexItemEditor.GetItemAt(index);
+
+            if (item != null)
+                return (MEX_Item)item;
+            else
+                return null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void itemExportButton_Click(object sender, EventArgs e)
         {
-            var f = Tools.FileIO.SaveFile("Item (*.yaml)|*.yaml");
+            var f = FileIO.SaveFile("Item (*.yaml)|*.yaml");
             if (f != null)
             {
                 if (itemTabs.SelectedIndex == 0 && commonItemEditor.SelectedObject is MEX_Item)
@@ -270,6 +318,12 @@ namespace HSDRawViewer.GUI.MEX.Controls
 
             if (item == null)
                 return;
+
+            if (item.ItemStates == null)
+            {
+                MessageBox.Show("This MxDt file does not contains item states", "Nothing to copy", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                return;
+            }
 
             StringBuilder table = new StringBuilder();
             int index = 0;

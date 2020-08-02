@@ -38,8 +38,7 @@
             this.splitter1 = new System.Windows.Forms.Splitter();
             this.toolStrip6 = new System.Windows.Forms.ToolStrip();
             this.saveAllChangesButton = new System.Windows.Forms.ToolStripButton();
-            this.installFighterButton = new System.Windows.Forms.ToolStripButton();
-            this.uninstallFighterButton = new System.Windows.Forms.ToolStripButton();
+            this.tabPage1 = new System.Windows.Forms.TabPage();
             this.mainTabControl.SuspendLayout();
             this.tabPageMusic.SuspendLayout();
             this.toolStrip6.SuspendLayout();
@@ -53,6 +52,7 @@
             this.mainTabControl.Controls.Add(this.tabPageEffects);
             this.mainTabControl.Controls.Add(this.tabPageCSS);
             this.mainTabControl.Controls.Add(this.tabPageMusic);
+            this.mainTabControl.Controls.Add(this.tabPage1);
             this.mainTabControl.Dock = System.Windows.Forms.DockStyle.Fill;
             this.mainTabControl.Location = new System.Drawing.Point(0, 25);
             this.mainTabControl.Name = "mainTabControl";
@@ -74,6 +74,7 @@
             // 
             this.tabPageStage.Location = new System.Drawing.Point(4, 22);
             this.tabPageStage.Name = "tabPageStage";
+            this.tabPageStage.Padding = new System.Windows.Forms.Padding(3);
             this.tabPageStage.Size = new System.Drawing.Size(791, 282);
             this.tabPageStage.TabIndex = 6;
             this.tabPageStage.Text = "Stages";
@@ -132,9 +133,7 @@
             // toolStrip6
             // 
             this.toolStrip6.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.saveAllChangesButton,
-            this.installFighterButton,
-            this.uninstallFighterButton});
+            this.saveAllChangesButton});
             this.toolStrip6.Location = new System.Drawing.Point(0, 0);
             this.toolStrip6.Name = "toolStrip6";
             this.toolStrip6.Size = new System.Drawing.Size(799, 25);
@@ -150,23 +149,14 @@
             this.saveAllChangesButton.Text = "Save All Changes";
             this.saveAllChangesButton.Click += new System.EventHandler(this.saveAllChangesButton_Click);
             // 
-            // installFighterButton
+            // tabPage1
             // 
-            this.installFighterButton.Image = global::HSDRawViewer.Properties.Resources.ts_importfile;
-            this.installFighterButton.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.installFighterButton.Name = "installFighterButton";
-            this.installFighterButton.Size = new System.Drawing.Size(98, 22);
-            this.installFighterButton.Text = "Install Fighter";
-            this.installFighterButton.Click += new System.EventHandler(this.installFighterButton_Click);
-            // 
-            // uninstallFighterButton
-            // 
-            this.uninstallFighterButton.Image = global::HSDRawViewer.Properties.Resources.ts_subtract;
-            this.uninstallFighterButton.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.uninstallFighterButton.Name = "uninstallFighterButton";
-            this.uninstallFighterButton.Size = new System.Drawing.Size(113, 22);
-            this.uninstallFighterButton.Text = "Uninstall Fighter";
-            this.uninstallFighterButton.Click += new System.EventHandler(this.uninstallFighterButton_Click);
+            this.tabPage1.Location = new System.Drawing.Point(4, 22);
+            this.tabPage1.Name = "tabPage1";
+            this.tabPage1.Size = new System.Drawing.Size(791, 282);
+            this.tabPage1.TabIndex = 7;
+            this.tabPage1.Text = "Sound";
+            this.tabPage1.UseVisualStyleBackColor = true;
             // 
             // MexDataEditor
             // 
@@ -198,8 +188,7 @@
         private System.Windows.Forms.TabPage tabPageItem;
         private System.Windows.Forms.ToolStrip toolStrip6;
         private System.Windows.Forms.ToolStripButton saveAllChangesButton;
-        private System.Windows.Forms.ToolStripButton installFighterButton;
-        private System.Windows.Forms.ToolStripButton uninstallFighterButton;
         private System.Windows.Forms.TabPage tabPageStage;
+        private System.Windows.Forms.TabPage tabPage1;
     }
 }

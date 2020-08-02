@@ -7,12 +7,88 @@ using System.Windows.Forms;
 using HSDRawViewer.GUI;
 using System.IO;
 using System;
-using nQuant;
+using HSDRawViewer.Tools;
 
 namespace HSDRawViewer.Converters
 {
     public class TOBJConverter
     {
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="tobj"></param>
+        /// <returns></returns>
+        public static string FormatName(string name, HSD_TOBJ tobj)
+        {
+            if (tobj.ImageData != null)
+                name += "_" + tobj.ImageData.Format.ToString();
+
+            if (tobj.TlutData != null)
+                name += "_" + tobj.TlutData.Format.ToString();
+
+            return name;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="texFmt"></param>
+        /// <param name="palFmt"></param>
+        public static bool FormatFromString(string name, out GXTexFmt texFmt, out GXTlutFmt palFmt)
+        {
+            texFmt = GXTexFmt.RGBA8;
+            palFmt = GXTlutFmt.RGB5A3;
+
+            var parts = Path.GetFileNameWithoutExtension(name).Split('_');
+
+            bool foundFormat = false;
+
+            foreach (var p in parts)
+            {
+                // skip numeric values
+                if (int.TryParse(p, out int i))
+                    continue;
+
+                if(Enum.TryParse(p.ToUpper(), out GXTexFmt format))
+                {
+                    texFmt = format;
+                    foundFormat = true;
+                }
+
+                if (Enum.TryParse(p.ToUpper(), out GXTlutFmt palFormat ))
+                    palFmt = palFormat;
+            }
+
+            return foundFormat;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tobj"></param>
+        /// <returns></returns>
+        public static bool IsTransparent(HSD_TOBJ tobj)
+        {
+            if (tobj.ImageData.Format == GXTexFmt.RGB565)
+                return false;
+
+            if ((tobj.ImageData.Format == GXTexFmt.CI8 && tobj.TlutData.Format == GXTlutFmt.RGB565) ||
+                (tobj.ImageData.Format == GXTexFmt.CI4 && tobj.TlutData.Format == GXTlutFmt.RGB565))
+                return false;
+
+            var d = tobj.GetDecodedImageData();
+            
+            for(int i = 0; i < d.Length; i += 4)
+            {
+                if (d[i + 3] != 255)
+                    return true;
+            }
+
+            return false;
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -66,7 +142,7 @@ namespace HSDRawViewer.Converters
                                     scan[i + 3] = data[d + 3];
                                 }
 
-                            return RgbaToImage(scan, width, height);
+                            return BitmapTools.RgbaToImage(scan, width, height);
                         }
                     }
                 }
@@ -85,7 +161,7 @@ namespace HSDRawViewer.Converters
         {
             var rgba = tobj.GetDecodedImageData();
 
-            return RgbaToImage(rgba, tobj.ImageData.Width, tobj.ImageData.Height);
+            return BitmapTools.RgbaToImage(rgba, tobj.ImageData.Width, tobj.ImageData.Height);
         }
 
 
@@ -141,6 +217,12 @@ namespace HSDRawViewer.Converters
             {
                 using (TextureImportDialog settings = new TextureImportDialog())
                 {
+                    if (FormatFromString(f, out GXTexFmt fmt, out GXTlutFmt pal))
+                    {
+                        settings.PaletteFormat = pal;
+                        settings.TextureFormat = fmt;
+                    }
+
                     if (settings.ShowDialog() == DialogResult.OK)
                         using (Bitmap bmp = new Bitmap(f))
                         {
@@ -167,6 +249,12 @@ namespace HSDRawViewer.Converters
             {
                 using (TextureImportDialog settings = new TextureImportDialog())
                 {
+                    if (FormatFromString(filepath, out GXTexFmt fmt, out GXTlutFmt pal))
+                    {
+                        settings.PaletteFormat = pal;
+                        settings.TextureFormat = fmt;
+                    }
+
                     if (settings.ShowDialog() == DialogResult.OK)
                     {
                         settings.ApplySettings(bmp);
@@ -186,6 +274,13 @@ namespace HSDRawViewer.Converters
         /// <param name="palFormat"></param>
         public static void InjectBitmap(string filepath, HSD_TOBJ tobj,GXTexFmt imgFormat, GXTlutFmt palFormat)
         {
+            // format override
+            if (FormatFromString(filepath, out GXTexFmt fmt, out GXTlutFmt pal))
+            {
+                palFormat = pal;
+                imgFormat = fmt;
+            }
+
             using (Bitmap bmp = LoadBitmapFromFile(filepath))
             {
                 InjectBitmap(bmp, tobj, imgFormat, palFormat);
@@ -232,7 +327,7 @@ namespace HSDRawViewer.Converters
                // if (imgFormat == GXTexFmt.CI8) // doesn't work well with alpha
                //     bmp = ReduceColors(bmp, 256);
                 if (imgFormat == GXTexFmt.CI4 || imgFormat == GXTexFmt.CI14X2)
-                    bmp = ReduceColors(bmp, 16);
+                    bmp = BitmapTools.ReduceColors(bmp, 16);
 
                 var bitmapData = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height), System.Drawing.Imaging.ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
                 var length = bitmapData.Stride * bitmapData.Height;
@@ -278,50 +373,6 @@ namespace HSDRawViewer.Converters
                 // Call unmanaged code
                 Marshal.FreeHGlobal(unmanagedPointer);
             }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="bmp"></param>
-        private static Bitmap ReduceColors(Bitmap bitmap, int colorCount)
-        {
-            if (bitmap.Width <= 16 && bitmap.Height <= 16) // no need
-                return bitmap;
-
-            var quantizer = new WuQuantizer();
-            using (var quantized = quantizer.QuantizeImage(bitmap, 10, 70, colorCount))
-            {
-                return new Bitmap(quantized);
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="data"></param>
-        /// <param name="width"></param>
-        /// <param name="height"></param>
-        /// <returns></returns>
-        public static Bitmap RgbaToImage(byte[] data, int width, int height)
-        {
-            if (width == 0) width = 1;
-            if (height == 0) height = 1;
-
-            Bitmap bmp = new Bitmap(width, height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-
-            try
-            {
-                System.Drawing.Imaging.BitmapData bmpData = bmp.LockBits(
-                                     new Rectangle(0, 0, bmp.Width, bmp.Height),
-                                     System.Drawing.Imaging.ImageLockMode.WriteOnly, bmp.PixelFormat);
-
-                System.Runtime.InteropServices.Marshal.Copy(data, 0, bmpData.Scan0, data.Length);
-                bmp.UnlockBits(bmpData);
-            }
-            catch { bmp.Dispose(); throw; }
-
-            return bmp;
         }
     }
 }

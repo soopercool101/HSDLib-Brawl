@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -16,6 +15,10 @@ namespace HSDRaw
         private byte[] _data = new byte[0];
 
         public bool IsTextureBuffer = false;
+
+        public bool CanBeBuffer = true;
+
+        public bool Align = true;
 
         public Dictionary<int, HSDStruct> References { get => _references; }
         private Dictionary<int, HSDStruct> _references = new Dictionary<int, HSDStruct>();
@@ -73,6 +76,18 @@ namespace HSDRaw
         {
             _data = str._data;
             _references = str._references;
+        }
+
+        public byte[] GetSubData(int offset, int length)
+        {
+            if (offset + length >= _data.Length)
+                length = _data.Length - offset;
+
+            byte[] d = new byte[length];
+            for (int i = 0; i < length; i++)
+                d[i] = _data[offset + i];
+
+            return d;
         }
 
         public byte[] GetData()
@@ -370,7 +385,7 @@ namespace HSDRaw
             }
             else
             {
-                var re = GetCreateReference<HSDArrayAccessor<T>>(loc);
+                var re = GetCreateReference<HSDNullPointerArrayAccessor<T>>(loc);
                 re.Array = value;
             }
         }
@@ -557,9 +572,9 @@ namespace HSDRaw
         /// </summary>
         /// <param name="refloc"></param>
         /// <param name="value"></param>
-        public void SetString(int refloc, string value)
+        public void SetString(int refloc, string value, bool nullable = false)
         {
-            if (value == null)
+            if (value == null || (nullable && string.IsNullOrEmpty(value)))
                 SetReference(refloc, null);
             else
             {
@@ -605,6 +620,14 @@ namespace HSDRaw
         public void Resize(int size)
         {
             Array.Resize(ref _data, size);
+
+            List<int> remove = new List<int>();
+            foreach (var v in References)
+                if (v.Key >= size)
+                    remove.Add(v.Key);
+
+            foreach (var rem in remove)
+                References.Remove(rem);
         }
 
         private byte[] EndianFix(byte[] b)

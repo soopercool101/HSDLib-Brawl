@@ -2,16 +2,13 @@
 
 namespace HSDRaw.Melee
 {
-    public class SBM_BoneTableBank : HSDFixedLengthPointerArrayAccessor<SBM_BoneTables>
-    {
-
-    }
-
-    public class SBM_BoneTables : HSDAccessor
+    public class SBM_BoneLookupTable : HSDAccessor
     {
         public override int TrimmedSize => 0x0C;
 
         private HSDAccessor CommonAttribute { get => _s.GetCreateReference<HSDAccessor>(0x04); set => _s.SetReference(0x04, value); }
+
+        public int BoneCount { get => _s.GetInt32(0x08); set => _s.SetInt32(0x08, value); }
 
         public byte Top { get => CommonAttribute._s.GetByte(0x00); set { CommonAttribute._s.SetByte(0x00, value); CreateReverseLookup(); } }
 
@@ -134,7 +131,7 @@ namespace HSDRaw.Melee
                 }
             }
 
-            _s.SetInt32(0x08, boneCount);
+            BoneCount = boneCount;
 
             var reverseTable = _s.GetCreateReference<HSDAccessor>(0x00);
             reverseTable._s.Resize(boneCount);
@@ -159,5 +156,47 @@ namespace HSDRaw.Melee
             for (int i = 0; i <= 53; i++)
                 CommonAttribute._s.SetByte(i, 0xFF);
         }
+    }
+
+    public class SBM_PlCoUnknownFighterTable : HSDAccessor
+    {
+        public override int TrimmedSize => 0x08;
+        
+        public SBM_PlCoUnknownFighterTableEntry[] Entries
+        {
+            get
+            {
+                if (_s.GetReference<HSDArrayAccessor<SBM_PlCoUnknownFighterTableEntry>>(0) == null)
+                    return null;
+
+                return _s.GetReference<HSDArrayAccessor<SBM_PlCoUnknownFighterTableEntry>>(0).Array;
+            }
+            set
+            {
+                if(value != null && value.Length > 0)
+                {
+                    _s.GetCreateReference<HSDArrayAccessor<SBM_PlCoUnknownFighterTableEntry>>(0).Array = value;
+                    _s.SetInt32(0x04, value.Length);
+                }
+                else
+                {
+                    _s.SetReference(0x00, null);
+                    _s.SetInt32(0x04, 0);
+                }
+            }
+        }
+    }
+
+    public class SBM_PlCoUnknownFighterTableEntry : HSDAccessor
+    {
+        public override int TrimmedSize => 0x04;
+
+        public byte Value1 { get => _s.GetByte(0x00); set => _s.SetByte(0x00, value); }
+
+        public byte Value2 { get => _s.GetByte(0x01); set => _s.SetByte(0x01, value); }
+
+        public byte Value3 { get => _s.GetByte(0x02); set => _s.SetByte(0x02, value); }
+
+        public byte Value4 { get => _s.GetByte(0x03); set => _s.SetByte(0x03, value); }
     }
 }

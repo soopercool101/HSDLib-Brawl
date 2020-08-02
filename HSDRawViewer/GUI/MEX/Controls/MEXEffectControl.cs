@@ -58,13 +58,35 @@ namespace HSDRawViewer.GUI.MEX.Controls
         /// <param name="data"></param>
         public void LoadData(MEX_Data data)
         {
-            Effects = new MEXEffectEntry[data.EffectFiles.Length];
+            bool updated = false;
+
+            // legacy update
+            if(data.EffectTable._s.Length != new MEX_EffectData().TrimmedSize)
+            {
+                var strings = data.EffectTable._s;
+                data.EffectTable = new MEX_EffectData();
+                var length = strings.Length;
+                data.EffectTable.EffectFiles = new HSDArrayAccessor<MEX_EffectFiles>() { _s = strings };
+                data.EffectTable.EffectRuntime = new HSDAccessor() { _s = new HSDStruct(0x60) };
+                data.EffectTable.RuntimeArray1 = new HSDAccessor() { _s = new HSDStruct(4 * length) };
+                data.EffectTable.RuntimeArray2 = new HSDAccessor() { _s = new HSDStruct(4 * length) };
+                data.EffectTable.RuntimeArray3 = new HSDAccessor() { _s = new HSDStruct(4 * length) };
+                data.EffectTable.RuntimeArray4 = new HSDAccessor() { _s = new HSDStruct(4 * length) };
+                data.EffectTable.RuntimeArray5 = new HSDAccessor() { _s = new HSDStruct(4 * length) };
+                data.EffectTable.RuntimeArray6 = new HSDAccessor() { _s = new HSDStruct(4 * length) };
+                updated = true;
+            }
+
+            if(updated)
+                MessageBox.Show("Effect Node Updated");
+
+            Effects = new MEXEffectEntry[data.EffectTable.EffectFiles.Length];
             for (int i = 0; i < Effects.Length; i++)
             {
                 Effects[i] = new MEXEffectEntry()
                 {
-                    FileName = data.EffectFiles[i].FileName,
-                    Symbol = data.EffectFiles[i].Symbol,
+                    FileName = data.EffectTable.EffectFiles[i].FileName,
+                    Symbol = data.EffectTable.EffectFiles[i].Symbol,
                 };
             }
             effectEditor.SetArrayFromProperty(this, "Effects");
@@ -77,15 +99,24 @@ namespace HSDRawViewer.GUI.MEX.Controls
         public void SaveData(MEX_Data data)
         {
             data.MetaData.NumOfEffects = Effects.Length;
-            data.EffectFiles = new HSDArrayAccessor<MEX_EffectFiles>();
+            data.EffectTable = new MEX_EffectData();
+            data.EffectTable.EffectFiles = new HSDArrayAccessor<MEX_EffectFiles>();
             foreach (var v in Effects)
             {
-                data.EffectFiles.Add(new MEX_EffectFiles()
+                data.EffectTable.EffectFiles.Add(new MEX_EffectFiles()
                 {
                     FileName = v.FileName,
                     Symbol = v.Symbol
                 });
             }
+
+            data.EffectTable.EffectRuntime = new HSDAccessor() { _s = new HSDStruct( 0x60 )};
+            data.EffectTable.RuntimeArray1 = new HSDAccessor() { _s = new HSDStruct(4 * Effects.Length) };
+            data.EffectTable.RuntimeArray2 = new HSDAccessor() { _s = new HSDStruct(4 * Effects.Length) };
+            data.EffectTable.RuntimeArray3 = new HSDAccessor() { _s = new HSDStruct(4 * Effects.Length) };
+            data.EffectTable.RuntimeArray4 = new HSDAccessor() { _s = new HSDStruct(4 * Effects.Length) };
+            data.EffectTable.RuntimeArray5 = new HSDAccessor() { _s = new HSDStruct(4 * Effects.Length) };
+            data.EffectTable.RuntimeArray6 = new HSDAccessor() { _s = new HSDStruct(4 * Effects.Length) };
         }
 
         /// <summary>
@@ -103,8 +134,7 @@ namespace HSDRawViewer.GUI.MEX.Controls
         /// <returns>added mex file id</returns>
         public int AddMEXEffectFile(MEXEffectEntry item)
         {
-            effectEditor.AddItem(item);
-            return Effects.Length - 1;
+            return effectEditor.AddItem(item);
         }
 
 
@@ -112,10 +142,15 @@ namespace HSDRawViewer.GUI.MEX.Controls
         /// 
         /// </summary>
         /// <param name="index"></param>
-        public void SafeRemoveEffectFile(int index)
+        public bool SafeRemoveEffectFile(int index)
         {
             if (!MexDataEditor.FighterControl.EffectInUse(index))
+            {
                 effectEditor.RemoveAt(index);
+                return true;
+            }
+
+            return false;
         }
 
 
@@ -135,20 +170,25 @@ namespace HSDRawViewer.GUI.MEX.Controls
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void saveEffectButton_Click(object sender, EventArgs e)
-        {
-            SaveData(MexData);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
         /// <param name="e"></param>
         private void effectEditor_OnItemRemove(RemovedItemEventArgs e)
         {
-            MexDataEditor.FighterControl.RemoveEffect(e.Index);
+            var index = e.Index;
+
+            foreach (var v in MexDataEditor.FighterControl.FighterEntries)
+            {
+                if (v.EffectIndex == index)
+                    v.EffectIndex = 0;
+
+                if (v.EffectIndex > index)
+                    v.EffectIndex--;
+
+                if (v.KirbyEffectID == index)
+                    v.KirbyEffectID = 0;
+
+                if (v.KirbyEffectID > index)
+                    v.KirbyEffectID--;
+            }
         }
 
         #endregion

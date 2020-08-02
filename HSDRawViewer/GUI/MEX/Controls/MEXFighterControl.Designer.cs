@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
-            this.saveFightersButton = new System.Windows.Forms.ToolStripButton();
+            this.importPlCoButton = new System.Windows.Forms.ToolStripButton();
             this.exportFighter = new System.Windows.Forms.ToolStripButton();
             this.importFighter = new System.Windows.Forms.ToolStripButton();
             this.cloneButton = new System.Windows.Forms.ToolStripButton();
@@ -42,17 +42,20 @@
             this.tabPage4 = new System.Windows.Forms.TabPage();
             this.functionPropertyGrid = new System.Windows.Forms.PropertyGrid();
             this.buttonCopyMoveLogic = new System.Windows.Forms.Button();
+            this.tabPage1 = new System.Windows.Forms.TabPage();
+            this.boneTablePropertyGrid = new System.Windows.Forms.PropertyGrid();
             this.toolStrip1.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.tabControl1.SuspendLayout();
             this.tabPage3.SuspendLayout();
             this.tabPage4.SuspendLayout();
+            this.tabPage1.SuspendLayout();
             this.SuspendLayout();
             // 
             // toolStrip1
             // 
             this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.saveFightersButton,
+            this.importPlCoButton,
             this.exportFighter,
             this.importFighter,
             this.cloneButton,
@@ -63,14 +66,14 @@
             this.toolStrip1.TabIndex = 5;
             this.toolStrip1.Text = "toolStrip1";
             // 
-            // saveFightersButton
+            // importPlCoButton
             // 
-            this.saveFightersButton.Image = global::HSDRawViewer.Properties.Resources.ico_save;
-            this.saveFightersButton.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.saveFightersButton.Name = "saveFightersButton";
-            this.saveFightersButton.Size = new System.Drawing.Size(140, 22);
-            this.saveFightersButton.Text = "Save Fighter Changes";
-            this.saveFightersButton.Click += new System.EventHandler(this.saveFightersButton_Click);
+            this.importPlCoButton.Image = global::HSDRawViewer.Properties.Resources.ts_importfile;
+            this.importPlCoButton.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.importPlCoButton.Name = "importPlCoButton";
+            this.importPlCoButton.Size = new System.Drawing.Size(111, 22);
+            this.importPlCoButton.Text = "Import PlCo.dat";
+            this.importPlCoButton.Click += new System.EventHandler(this.plcoButton_Click);
             // 
             // exportFighter
             // 
@@ -104,8 +107,8 @@
             this.deleteFighter.Image = global::HSDRawViewer.Properties.Resources.ts_subtract;
             this.deleteFighter.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.deleteFighter.Name = "deleteFighter";
-            this.deleteFighter.Size = new System.Drawing.Size(100, 22);
-            this.deleteFighter.Text = "Delete Fighter";
+            this.deleteFighter.Size = new System.Drawing.Size(94, 22);
+            this.deleteFighter.Text = "Delete Clone";
             this.deleteFighter.Click += new System.EventHandler(this.deleteFighter_Click);
             // 
             // groupBox1
@@ -135,6 +138,7 @@
             // 
             this.tabControl1.Controls.Add(this.tabPage3);
             this.tabControl1.Controls.Add(this.tabPage4);
+            this.tabControl1.Controls.Add(this.tabPage1);
             this.tabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabControl1.Location = new System.Drawing.Point(200, 25);
             this.tabControl1.Name = "tabControl1";
@@ -196,6 +200,26 @@
             this.buttonCopyMoveLogic.UseVisualStyleBackColor = true;
             this.buttonCopyMoveLogic.Click += new System.EventHandler(this.buttonCopyMoveLogic_Click);
             // 
+            // tabPage1
+            // 
+            this.tabPage1.Controls.Add(this.boneTablePropertyGrid);
+            this.tabPage1.Location = new System.Drawing.Point(4, 22);
+            this.tabPage1.Name = "tabPage1";
+            this.tabPage1.Size = new System.Drawing.Size(512, 429);
+            this.tabPage1.TabIndex = 2;
+            this.tabPage1.Text = "Bone Table";
+            this.tabPage1.UseVisualStyleBackColor = true;
+            // 
+            // boneTablePropertyGrid
+            // 
+            this.boneTablePropertyGrid.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.boneTablePropertyGrid.HelpVisible = false;
+            this.boneTablePropertyGrid.Location = new System.Drawing.Point(0, 0);
+            this.boneTablePropertyGrid.Name = "boneTablePropertyGrid";
+            this.boneTablePropertyGrid.PropertySort = System.Windows.Forms.PropertySort.Categorized;
+            this.boneTablePropertyGrid.Size = new System.Drawing.Size(512, 429);
+            this.boneTablePropertyGrid.TabIndex = 0;
+            // 
             // MEXFighterControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -211,6 +235,7 @@
             this.tabControl1.ResumeLayout(false);
             this.tabPage3.ResumeLayout(false);
             this.tabPage4.ResumeLayout(false);
+            this.tabPage1.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -218,7 +243,6 @@
 
         #endregion
         private System.Windows.Forms.ToolStrip toolStrip1;
-        private System.Windows.Forms.ToolStripButton saveFightersButton;
         private System.Windows.Forms.ToolStripButton exportFighter;
         private System.Windows.Forms.ToolStripButton importFighter;
         private System.Windows.Forms.ToolStripButton cloneButton;
@@ -231,5 +255,8 @@
         private System.Windows.Forms.TabPage tabPage4;
         private System.Windows.Forms.PropertyGrid functionPropertyGrid;
         private System.Windows.Forms.Button buttonCopyMoveLogic;
+        private System.Windows.Forms.TabPage tabPage1;
+        private System.Windows.Forms.PropertyGrid boneTablePropertyGrid;
+        private System.Windows.Forms.ToolStripButton importPlCoButton;
     }
 }

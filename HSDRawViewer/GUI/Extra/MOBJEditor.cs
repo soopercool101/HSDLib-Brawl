@@ -56,7 +56,7 @@ namespace HSDRawViewer.GUI.Extra
                 int index = 0;
                 foreach(var t in tex)
                 {
-                    var bmp = TOBJConverter.RgbaToImage(t.GetDecodedImageData(), t.ImageData.Width, t.ImageData.Height);
+                    var bmp = Tools.BitmapTools.RgbaToImage(t.GetDecodedImageData(), t.ImageData.Width, t.ImageData.Height);
 
                     TextureList.Images.Add(bmp);
 
@@ -184,9 +184,16 @@ namespace HSDRawViewer.GUI.Extra
             if(listTexture.SelectedItems.Count > 0 && listTexture.SelectedItems[0] is TextureContainer con)
             {
                 propertyTexture.SelectedObject = con.TOBJ;
+
+                enableTEVCB.Checked = (con.TOBJ.TEV != null);
+                tevPropertyGrid.SelectedObject = con.TOBJ.TEV;
             }
             else
+            {
                 propertyTexture.SelectedObject = null;
+                enableTEVCB.Checked = false;
+                tevPropertyGrid.SelectedObject = null;
+            }
         }
 
         /// <summary>
@@ -285,13 +292,13 @@ namespace HSDRawViewer.GUI.Extra
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void toolStripButton1_Click(object sender, EventArgs e)
+        private void importTexture_Click(object sender, EventArgs e)
         {
             var tobj = TOBJConverter.ImportTOBJFromFile();
 
             if(tobj != null)
             {
-                var bmp = TOBJConverter.RgbaToImage(tobj.GetDecodedImageData(), tobj.ImageData.Width, tobj.ImageData.Height);
+                var bmp = Tools.BitmapTools.RgbaToImage(tobj.GetDecodedImageData(), tobj.ImageData.Width, tobj.ImageData.Height);
 
                 listTexture.Items.Add(new TextureContainer(tobj)
                 {
@@ -319,13 +326,15 @@ namespace HSDRawViewer.GUI.Extra
                 if (tobj != null)
                 {
                     // replace tobj
-                    con.TOBJ._s.SetFromStruct(tobj._s);
+                    con.TOBJ.ImageData = tobj.ImageData;
+                    con.TOBJ.TlutData = tobj.TlutData;
+                    //con.TOBJ._s.SetFromStruct(tobj._s);
                     
                     // replace image in list
                     var image = TextureList.Images[con.ImageIndex];
                     image.Dispose();
 
-                    var newImage = TOBJConverter.RgbaToImage(tobj.GetDecodedImageData(), tobj.ImageData.Width, tobj.ImageData.Height);
+                    var newImage = Tools.BitmapTools.RgbaToImage(tobj.GetDecodedImageData(), tobj.ImageData.Width, tobj.ImageData.Height);
 
                     TextureList.Images[con.ImageIndex] = newImage;
                     
@@ -334,6 +343,7 @@ namespace HSDRawViewer.GUI.Extra
                     
                     // refresh
                     listTexture.Items[listTexture.SelectedIndices[0]] = listTexture.Items[listTexture.SelectedIndices[0]];
+                    listTexture.Invalidate();
                 }
             }
         }
@@ -351,7 +361,6 @@ namespace HSDRawViewer.GUI.Extra
                 var tc = (listTexture.SelectedItems[0] as TextureContainer);
                 tc.Text = tc.TOBJ.Flags.ToString();
                 listTexture.Items[listTexture.SelectedIndices[0]] = listTexture.Items[listTexture.SelectedIndices[0]];
-
             }
         }
 
@@ -370,6 +379,30 @@ namespace HSDRawViewer.GUI.Extra
                     var bmp = TOBJConverter.ToBitmap(con.TOBJ);
                     bmp.Save(f);
                     bmp.Dispose();
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void enableTEVCB_CheckedChanged(object sender, EventArgs e)
+        {
+            if (propertyTexture.SelectedObject is HSD_TOBJ tobj)
+            {
+                if (enableTEVCB.Checked)
+                {
+                    if(tobj.TEV == null)
+                        tobj.TEV = new HSD_TOBJ_TEV();
+
+                    tevPropertyGrid.Visible = true;
+                }
+                else
+                {
+                    tobj.TEV = null;
+                    tevPropertyGrid.Visible = false;
                 }
             }
         }

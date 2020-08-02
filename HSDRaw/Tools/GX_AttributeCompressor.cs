@@ -89,7 +89,13 @@ namespace HSDRaw.Tools
                     break;
                 case GXAttribName.GX_VA_CLR0:
                 case GXAttribName.GX_VA_CLR1:
-                    attr.CompCount = GXCompCnt.ClrRGB;
+                    if (attr.CompType == GXCompType.RGBA4 ||
+                        attr.CompType == GXCompType.RGBA6 ||
+                        attr.CompType == GXCompType.RGBA8 ||
+                        attr.CompType == GXCompType.RGBX8)
+                        attr.CompCount = GXCompCnt.ClrRGBA;
+                    else
+                        attr.CompCount = GXCompCnt.ClrRGB;
                     break;
                 default:
                     throw new NotSupportedException($"{attr.AttributeName} not supported for optimizing");
@@ -133,11 +139,19 @@ namespace HSDRaw.Tools
 
             double error = 0;
             if (!signed)
-                // byte or ushort
-                error = (byte)(max * Math.Pow(2, byteScale)) / Math.Pow(2, byteScale);
+            // byte or ushort
+            {
+                foreach (float[] v in values)
+                    foreach (var val in v)
+                        error = Math.Max(error, (byte)(val * Math.Pow(2, byteScale)) / Math.Pow(2, byteScale));
+            }
             else
-                // sbyte or short
-                error = (sbyte)(max * Math.Pow(2, sbyteScale)) / Math.Pow(2, sbyteScale);
+            // sbyte or short
+            {
+                foreach (float[] v in values)
+                    foreach (var val in v)
+                        error = (sbyte)(val * Math.Pow(2, sbyteScale)) / Math.Pow(2, sbyteScale);
+            }
 
 
             if (Math.Abs(max - error) < Epsilon)

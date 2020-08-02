@@ -6,6 +6,7 @@ using System.Windows.Forms;
 using HSDRaw.MEX;
 using HSDRawViewer.Rendering;
 using HSDRaw.MEX.Menus;
+using OpenTK.Input;
 
 namespace HSDRawViewer.GUI.MEX.Controls
 {
@@ -48,7 +49,7 @@ namespace HSDRawViewer.GUI.MEX.Controls
         /// <summary>
         /// 
         /// </summary>
-        private ViewportControl viewport;
+        public ViewportControl viewport;
 
         private bool CSSSelected => tabControl.SelectedIndex == 0;
 
@@ -306,6 +307,14 @@ namespace HSDRawViewer.GUI.MEX.Controls
                 Frame = 0;
             else
                 Frame = -1;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="kbState"></param>
+        public void ViewportKeyPress(KeyboardState kbState)
+        {
         }
     }
 }

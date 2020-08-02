@@ -1,15 +1,10 @@
 ﻿using HSDRaw;
 using HSDRaw.Common;
+using HSDRaw.Melee;
 using HSDRaw.MEX;
 using HSDRaw.MEX.Characters;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.IO;
-using System.Linq;
-using YamlDotNet.Serialization;
-using YamlDotNet.Serialization.NamingConventions;
-using YamlDotNet.Serialization.TypeInspectors;
 
 namespace HSDRawViewer.GUI.MEX
 {
@@ -132,16 +127,23 @@ namespace HSDRawViewer.GUI.MEX
         [DisplayName("Victory Theme"), Category("3 - Misc"), Description(""), TypeConverter(typeof(MusicIDConverter))]
         public int VictoryThemeID { get; set; }
 
+        [DisplayName("Fighter Song"), Category("3 - Misc"), Description(""), TypeConverter(typeof(MusicIDConverter))]
+        public int FighterSongID { get; set; }
+
+        [DisplayName("Fighter Song Unknown Value"), Category("3 - Misc"), Description("")]
+        public byte UnknownFighterSongValue { get; set; }
+
         [DisplayName("Effect File"), Category("3 - Misc"), Description(""), TypeConverter(typeof(EffectIDConverter))]
         public int EffectIndex { get; set; }
 
         [DisplayName("SSM"), Category("3 - Misc"), Description("Index of SSM file for this fighter"), TypeConverter(typeof(SSMIDConverter))]
         public int SSMIndex { get; set; }
 
-        [DisplayName("SSM Bitfield 1"), Category("3 - Misc"), Description(""), TypeConverter(typeof(HexType))]
+        // no need to expose these to the user
+        [Browsable(false), DisplayName("SSM Bitfield 1"), Category("3 - Misc"), Description(""), TypeConverter(typeof(HexType))]
         public uint SSMBitfield1 { get; set; }
 
-        [DisplayName("SSM Bitfield 2"), Category("3 - Misc"), Description(""), TypeConverter(typeof(HexType))]
+        [Browsable(false), DisplayName("SSM Bitfield 2"), Category("3 - Misc"), Description(""), TypeConverter(typeof(HexType))]
         public uint SSMBitfield2 { get; set; }
 
         [DisplayName("Narrator Sound Clip"), Category("3 - Misc"), Description("Index of narrator sound clip")]
@@ -154,6 +156,34 @@ namespace HSDRawViewer.GUI.MEX
 
         [DisplayName("SubCharacter Behavior"), Category("3 - Misc"), Description("")]
         public SubCharacterBehavior SubCharacterBehavior { get; set; }
+
+
+        ///Note: if you change this name update MexTypeInspector as well
+        [DisplayName("Unk Table"), Category("3 - Misc"), Description("")]
+        public SBM_PlCoUnknownFighterTableEntry[] UnkTableEntries
+        {
+            get
+            {
+                if (UnkTable == null)
+                    return null;
+
+                return UnkTable.Entries;
+            }
+            set
+            {
+                if (value == null || value.Length == 0)
+                    UnkTable = null;
+                else
+                {
+                    if (UnkTable == null)
+                        UnkTable = new SBM_PlCoUnknownFighterTable();
+
+                    UnkTable.Entries = value;
+                }
+            }
+        }
+
+        public SBM_PlCoUnknownFighterTable UnkTable;
 
 
         [DisplayName("Kirby Cap FileName"), Category("4 - Kirby"), Description("")]
@@ -171,17 +201,36 @@ namespace HSDRawViewer.GUI.MEX
 
         public MEXFunctionPointers Functions = new MEXFunctionPointers();
 
+        public SBM_BoneLookupTable BoneTable;
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="mexData"></param>
+        /// <param name="internalID"></param>
+        /// <returns></returns>
         public bool IsSpecialCharacterInternal(MEX_Data mexData, int internalID)
         {
             return internalID >= mexData.MetaData.NumOfInternalIDs - MEXIdConverter.InternalSpecialCharCount;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="mexData"></param>
+        /// <param name="externalID"></param>
+        /// <returns></returns>
         public bool IsSpecialCharacterExternal(MEX_Data mexData, int externalID)
         {
             return externalID >= mexData.MetaData.NumOfExternalIDs - MEXIdConverter.ExternalSpecialCharCount;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="length"></param>
+        /// <param name="s"></param>
+        /// <returns></returns>
         private byte[] GenerateSpecialBuffer(int length, string s)
         {
             byte[] b = new byte[length];
@@ -190,6 +239,13 @@ namespace HSDRawViewer.GUI.MEX
             return b;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="mexData"></param>
+        /// <param name="internalId"></param>
+        /// <param name="externalID"></param>
+        /// <returns></returns>
         public MEXFighterEntry LoadData(MEX_Data mexData, int internalId, int externalID)
         {
             Functions.LoadData(mexData, internalId, externalID);
@@ -225,7 +281,7 @@ namespace HSDRawViewer.GUI.MEX
             KirbyCapFileName = mexData.KirbyData.CapFiles[internalId].FileName;
             KirbyCapSymbol = mexData.KirbyData.CapFiles[internalId].Symbol;
             KirbySpecialCostumes = mexData.KirbyData.KirbyCostumes[internalId]?.Array;
-            KirbyEffectID = mexData.KirbyData.EffectIDs[internalId].Value;
+            KirbyEffectID = mexData.KirbyData.KirbyEffectIDs[internalId].Value;
 
             if (!IsSpecialCharacterInternal(mexData, internalId))
             {
@@ -234,6 +290,10 @@ namespace HSDRawViewer.GUI.MEX
                 DemoEnding = mexData.FighterData.FtDemo_SymbolNames.Array[internalId].Ending;
                 DemoWait = mexData.FighterData.FtDemo_SymbolNames.Array[internalId].ViWait;
             }
+            
+            VictoryThemeID = mexData.FighterData.VictoryThemeIDs[externalID].Value;
+            FighterSongID = mexData.FighterData.FighterSongIDs[externalID].SongID;
+            UnknownFighterSongValue = mexData.FighterData.FighterSongIDs[externalID].Unknown;
 
             if (!IsSpecialCharacterExternal(mexData, externalID))
             {
@@ -242,13 +302,18 @@ namespace HSDRawViewer.GUI.MEX
                 BlueCostumeID = mexData.FighterData.CostumeIDs[externalID].BlueCostumeIndex;
 
                 ResultScreenScale = mexData.FighterData.ResultScale[externalID].Value;
-                VictoryThemeID = mexData.FighterData.VictoryThemeIDs[externalID].Value;
                 TargetTestStage = mexData.FighterData.TargetTestStageLookups[externalID].Value;
             }
 
             return this;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="mexData"></param>
+        /// <param name="internalId"></param>
+        /// <param name="externalID"></param>
         public void SaveData(MEX_Data mexData, int internalId, int externalID)
         {
             Functions.SaveData(mexData, internalId, externalID);
@@ -289,7 +354,7 @@ namespace HSDRawViewer.GUI.MEX
             else
                 mexData.KirbyData.KirbyCostumes.Set(internalId, null);
             
-            mexData.KirbyData.EffectIDs.Set(internalId, new HSD_Byte() { Value = (byte)KirbyEffectID });
+            mexData.KirbyData.KirbyEffectIDs.Set(internalId, new HSD_Byte() { Value = (byte)KirbyEffectID });
 
             mexData.FighterData.CostumePointers.Set(internalId, new MEX_CostumeRuntimePointers()
             {
@@ -310,7 +375,7 @@ namespace HSDRawViewer.GUI.MEX
                 SubCharacterInternalID = (byte)SubCharacterInternalID,
                 SubCharacterBehavior = SubCharacterBehavior
             });
-
+            
             if (!IsSpecialCharacterInternal(mexData, internalId))
             {
                 if (DemoResult == null)
@@ -334,7 +399,13 @@ namespace HSDRawViewer.GUI.MEX
             }
             
             mexData.FighterData.ResultAnimFiles.Set(externalID, new HSD_String() { Value = RstAnimFile });
-            
+
+            mexData.FighterData.VictoryThemeIDs.Set(externalID, new HSD_Int() { Value = VictoryThemeID });
+            mexData.FighterData.FighterSongIDs.Set(externalID, new MEX_FighterSongID() {
+                SongID = (short)FighterSongID,
+                Unknown = UnknownFighterSongValue}
+            );
+
             if (!IsSpecialCharacterExternal(mexData, externalID))
             {
                 mexData.FighterData.CostumeIDs.Set(externalID, new MEX_CostumeIDs()
@@ -346,56 +417,9 @@ namespace HSDRawViewer.GUI.MEX
                 });
 
                 mexData.FighterData.ResultScale.Set(externalID, new HSD_Float() { Value = ResultScreenScale });
-                mexData.FighterData.VictoryThemeIDs.Set(externalID, new HSD_Int() { Value = VictoryThemeID });
                 mexData.FighterData.TargetTestStageLookups.Set(externalID, new HSD_UShort() { Value = (ushort)TargetTestStage });
             }
 
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="filePath"></param>
-        /// <returns></returns>
-        public static MEXFighterEntry DeserializeFile(string filePath)
-        {
-            var deserializer = new DeserializerBuilder()
-            .WithNamingConvention(CamelCaseNamingConvention.Instance)
-            .WithTypeInspector(inspector => new MEXTypeInspector(inspector))
-            .Build();
-
-            return deserializer.Deserialize<MEXFighterEntry>(File.ReadAllText(filePath));
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="filePath"></param>
-        /// <returns></returns>
-        public static MEXFighterEntry Deserialize(string data)
-        {
-            var deserializer = new DeserializerBuilder()
-            .WithNamingConvention(CamelCaseNamingConvention.Instance)
-            .WithTypeInspector(inspector => new MEXTypeInspector(inspector))
-            .Build();
-
-            return deserializer.Deserialize<MEXFighterEntry>(data);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="filepath"></param>
-        public void Serialize(string filepath)
-        {
-            var builder = new SerializerBuilder();
-            builder.WithNamingConvention(CamelCaseNamingConvention.Instance);
-            builder.WithTypeInspector(inspector => new MEXTypeInspector(inspector));
-
-            using (StreamWriter writer = File.CreateText(filepath))
-            {
-                builder.Build().Serialize(writer, this);
-            }
         }
 
         public override string ToString()
@@ -404,7 +428,9 @@ namespace HSDRawViewer.GUI.MEX
         }
     }
 
-
+    /// <summary>
+    /// 
+    /// </summary>
     public class MEXFunctionPointers
     {
         [TypeConverter(typeof(HexType)), Category("Fighter")]
@@ -418,6 +444,9 @@ namespace HSDRawViewer.GUI.MEX
 
         [Category("Fighter")]
         public MEX_MoveLogic[] MoveLogic { get; set; }
+
+        [TypeConverter(typeof(HexType)), Category("Fighter")]
+        public uint MoveLogicPointer { get; set; }
 
         [TypeConverter(typeof(HexType)), Category("Fighter")]
         public uint SpecialN { get; set; }
@@ -507,7 +536,10 @@ namespace HSDRawViewer.GUI.MEX
         public uint OnActionStateChangeWhileEyeTextureIsChanged { get; set; }
 
         [TypeConverter(typeof(HexType)), Category("Fighter")]
-        public uint OnTwoEntryTable { get; set; }
+        public uint OnTwoEntryTable1 { get; set; }
+
+        [TypeConverter(typeof(HexType)), Category("Fighter")]
+        public uint OnTwoEntryTable2 { get; set; }
 
         [TypeConverter(typeof(HexType)), Category("Fighter")]
         public uint OnLand { get; set; }
@@ -544,7 +576,13 @@ namespace HSDRawViewer.GUI.MEX
             OnLoad = mexData.FighterFunctions.OnLoad[internalId].Value;
             OnDeath = mexData.FighterFunctions.OnDeath[internalId].Value;
             OnUnk = mexData.FighterFunctions.OnUnknown[internalId].Value;
-            MoveLogic = mexData.FighterFunctions.MoveLogic.Array[internalId].Array;
+
+            if (mexData.MetaData.Flags.HasFlag(MexFlags.ContainMoveLogic))
+                MoveLogic = mexData.FighterFunctions.MoveLogic.Array[internalId]?.Array;
+
+            if (!mexData.MetaData.Flags.HasFlag(MexFlags.ContainMoveLogic))
+                MoveLogicPointer = mexData.FighterFunctions.MoveLogicPointers[internalId].Value;
+
             SpecialN = mexData.FighterFunctions.SpecialN[internalId].Value;
             SpecialNAir = mexData.FighterFunctions.SpecialNAir[internalId].Value;
             SpecialHi = mexData.FighterFunctions.SpecialHi[internalId].Value;
@@ -572,7 +610,8 @@ namespace HSDRawViewer.GUI.MEX
             OnShadowRender = mexData.FighterFunctions.onShadowRender[internalId].Value;
             OnUnknownMultijump = mexData.FighterFunctions.onUnknownMultijump[internalId].Value;
             OnActionStateChangeWhileEyeTextureIsChanged = mexData.FighterFunctions.onActionStateChangeWhileEyeTextureIsChanged[internalId].Value;
-            OnTwoEntryTable = mexData.FighterFunctions.onTwoEntryTable[internalId].Value;
+            OnTwoEntryTable1 = mexData.FighterFunctions.onTwoEntryTable[internalId * 2].Value;
+            OnTwoEntryTable2 = mexData.FighterFunctions.onTwoEntryTable[internalId * 2 + 1].Value;
             OnLand = mexData.FighterFunctions.onLand[internalId].Value;
 
             SmashDown = mexData.FighterFunctions.onSmashDown[internalId].Value;
@@ -598,7 +637,13 @@ namespace HSDRawViewer.GUI.MEX
             mexData.FighterFunctions.OnLoad.Set(internalId, new HSD_UInt() { Value = OnLoad });
             mexData.FighterFunctions.OnDeath.Set(internalId, new HSD_UInt() { Value = OnDeath });
             mexData.FighterFunctions.OnUnknown.Set(internalId, new HSD_UInt() { Value = OnUnk });
-            mexData.FighterFunctions.MoveLogic.Set(internalId, new HSDRaw.HSDArrayAccessor<MEX_MoveLogic>() { Array = MoveLogic });
+
+            if (mexData.MetaData.Flags.HasFlag(MexFlags.ContainMoveLogic) && MoveLogic != null)
+                mexData.FighterFunctions.MoveLogic.Set(internalId, new HSDArrayAccessor<MEX_MoveLogic>() { Array = MoveLogic });
+
+            if (!mexData.MetaData.Flags.HasFlag(MexFlags.ContainMoveLogic))
+                mexData.FighterFunctions.MoveLogicPointers.Set(internalId, new HSD_UInt() { Value = MoveLogicPointer });
+
             mexData.FighterFunctions.SpecialN.Set(internalId, new HSD_UInt() { Value = SpecialN });
             mexData.FighterFunctions.SpecialNAir.Set(internalId, new HSD_UInt() { Value = SpecialNAir });
             mexData.FighterFunctions.SpecialHi.Set(internalId, new HSD_UInt() { Value = SpecialHi });
@@ -625,7 +670,8 @@ namespace HSDRawViewer.GUI.MEX
             mexData.FighterFunctions.onShadowRender.Set(internalId, new HSD_UInt() { Value = OnShadowRender });
             mexData.FighterFunctions.onUnknownMultijump.Set(internalId, new HSD_UInt() { Value = OnUnknownMultijump });
             mexData.FighterFunctions.onActionStateChangeWhileEyeTextureIsChanged.Set(internalId, new HSD_UInt() { Value = OnActionStateChangeWhileEyeTextureIsChanged });
-            mexData.FighterFunctions.onTwoEntryTable.Set(internalId, new HSD_UInt() { Value = OnTwoEntryTable });
+            mexData.FighterFunctions.onTwoEntryTable.Set(internalId * 2, new HSD_UInt() { Value = OnTwoEntryTable1 });
+            mexData.FighterFunctions.onTwoEntryTable.Set(internalId * 2 + 1, new HSD_UInt() { Value = OnTwoEntryTable2 });
             mexData.FighterFunctions.onLand.Set(internalId, new HSD_UInt() { Value = OnLand });
 
             mexData.FighterFunctions.onSmashDown.Set(internalId, new HSD_UInt() { Value = SmashDown });
@@ -642,23 +688,6 @@ namespace HSDRawViewer.GUI.MEX
             mexData.KirbyFunctions.KirbySpecialNAir.Set(internalId, new HSD_UInt() { Value = KirbySpecialNAir });
             mexData.KirbyFunctions.KirbyOnHit.Set(internalId, new HSD_UInt() { Value = KirbyOnHit });
             mexData.KirbyFunctions.KirbyOnItemInit.Set(internalId, new HSD_UInt() { Value = KirbyOnItemInit });
-        }
-    }
-    
-    public class MEXTypeInspector : TypeInspectorSkeleton
-    {
-        private readonly ITypeInspector _innerTypeDescriptor;
-
-        public MEXTypeInspector(ITypeInspector innerTypeDescriptor)
-        {
-            _innerTypeDescriptor = innerTypeDescriptor;
-        }
-
-        public override IEnumerable<IPropertyDescriptor> GetProperties(Type type, object container)
-        {
-            var props = _innerTypeDescriptor.GetProperties(type, container);
-            props = props.Where(p => p.Type != typeof(HSDStruct) && p.Name != "trimmedSize" && p.Name != "costumeCount");
-            return props;
         }
     }
 }

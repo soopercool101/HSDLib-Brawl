@@ -1,6 +1,7 @@
 ﻿using HSDRaw.MEX;
 using HSDRawViewer.GUI.MEX.Controls;
 using HSDRawViewer.GUI.Plugins;
+using HSDRawViewer.Tools;
 using System;
 using System.Linq;
 using System.Windows.Forms;
@@ -16,6 +17,7 @@ namespace HSDRawViewer.GUI.MEX
         public MEXEffectControl EffectControl;
         public MEXMusicControl MusicControl;
         public MEXMenuControl MenuControl;
+        public MEXSemControl SoundControl;
 
         public MexDataEditor()
         {
@@ -45,7 +47,11 @@ namespace HSDRawViewer.GUI.MEX
             MusicControl = new MEXMusicControl();
             MusicControl.Dock = DockStyle.Fill;
             mainTabControl.TabPages[5].Controls.Add(MusicControl);
-            
+
+            SoundControl = new MEXSemControl();
+            SoundControl.Dock = DockStyle.Fill;
+            mainTabControl.TabPages[6].Controls.Add(SoundControl);
+
         }
 
         public DockState DefaultDockState => DockState.Document;
@@ -86,6 +92,9 @@ namespace HSDRawViewer.GUI.MEX
 
             // Stages
             StageControl.LoadData(_data);
+
+            // Stages
+            SoundControl.LoadData(_data);
         }
         
         /// <summary>
@@ -101,6 +110,10 @@ namespace HSDRawViewer.GUI.MEX
             EffectControl.SaveData(_data);
             MenuControl.SaveData(_data);
             MusicControl.SaveData(_data);
+            SoundControl.SaveData(_data);
+
+            if (MessageBox.Show("Save File", "Save All Changes to Disk", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question) == DialogResult.Yes)
+                MainForm.Instance.SaveDAT();
         }
         
         /// <summary>
@@ -110,12 +123,16 @@ namespace HSDRawViewer.GUI.MEX
         /// <param name="e"></param>
         private void installFighterButton_Click(object sender, EventArgs e)
         {
-            var f = Tools.FileIO.OpenFile("Fighter Package (*.zip)|*.zip");
-            if(f != null)
+        }
+
+        private void OldInstall()
+        {
+            var f = FileIO.OpenFile("Fighter Package (*.zip)|*.zip");
+            if (f != null)
             {
                 MenuControl.CloseMenuFiles();
 
-                using (ProgressBarDisplay d = new ProgressBarDisplay (new FighterPackageInstaller(f, this)))
+                using (ProgressBarDisplay d = new ProgressBarDisplay(new FighterPackageInstaller(f, this)))
                 {
                     d.DoWork();
                     d.ShowDialog();
@@ -133,7 +150,6 @@ namespace HSDRawViewer.GUI.MEX
                 MainForm.Instance.SaveDAT();
             }
         }
-
         /// <summary>
         /// 
         /// </summary>
@@ -141,7 +157,11 @@ namespace HSDRawViewer.GUI.MEX
         /// <param name="e"></param>
         private void uninstallFighterButton_Click(object sender, EventArgs e)
         {
-            if(FighterControl.IsExtendedFighter(FighterControl.SelectedIndex) && FighterControl.SelectedEntry != null)
+        }
+
+        private void OldUninstall()
+        {
+            if (FighterControl.IsExtendedFighter(FighterControl.SelectedIndex) && FighterControl.SelectedEntry != null)
             {
                 using (ProgressBarDisplay d = new ProgressBarDisplay(new FighterPackageUninstaller(FighterControl.SelectedIndex, FighterControl.SelectedEntry, this)))
                 {

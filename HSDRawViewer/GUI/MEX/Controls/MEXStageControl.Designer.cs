@@ -29,7 +29,9 @@
         private void InitializeComponent()
         {
             this.toolStrip7 = new System.Windows.Forms.ToolStrip();
-            this.saveStageButton = new System.Windows.Forms.ToolStripButton();
+            this.importStageButton = new System.Windows.Forms.ToolStripButton();
+            this.exportStageButton = new System.Windows.Forms.ToolStripButton();
+            this.removeStageButton = new System.Windows.Forms.ToolStripButton();
             this.mapGOBJCopyButton = new System.Windows.Forms.ToolStripButton();
             this.stageTabControl = new System.Windows.Forms.TabControl();
             this.tabPage5 = new System.Windows.Forms.TabPage();
@@ -45,7 +47,9 @@
             // toolStrip7
             // 
             this.toolStrip7.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.saveStageButton,
+            this.importStageButton,
+            this.exportStageButton,
+            this.removeStageButton,
             this.mapGOBJCopyButton});
             this.toolStrip7.Location = new System.Drawing.Point(0, 0);
             this.toolStrip7.Name = "toolStrip7";
@@ -53,14 +57,32 @@
             this.toolStrip7.TabIndex = 1;
             this.toolStrip7.Text = "toolStrip7";
             // 
-            // saveStageButton
+            // importStageButton
             // 
-            this.saveStageButton.Image = global::HSDRawViewer.Properties.Resources.ico_save;
-            this.saveStageButton.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.saveStageButton.Name = "saveStageButton";
-            this.saveStageButton.Size = new System.Drawing.Size(132, 22);
-            this.saveStageButton.Text = "Save Stage Changes";
-            this.saveStageButton.Click += new System.EventHandler(this.saveStageButton_Click);
+            this.importStageButton.Image = global::HSDRawViewer.Properties.Resources.ts_importfile;
+            this.importStageButton.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.importStageButton.Name = "importStageButton";
+            this.importStageButton.Size = new System.Drawing.Size(95, 22);
+            this.importStageButton.Text = "Import Stage";
+            this.importStageButton.Click += new System.EventHandler(this.importStageButton_Click);
+            // 
+            // exportStageButton
+            // 
+            this.exportStageButton.Image = global::HSDRawViewer.Properties.Resources.ts_exportfile;
+            this.exportStageButton.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.exportStageButton.Name = "exportStageButton";
+            this.exportStageButton.Size = new System.Drawing.Size(93, 22);
+            this.exportStageButton.Text = "Export Stage";
+            this.exportStageButton.Click += new System.EventHandler(this.exportStageButton_Click);
+            // 
+            // removeStageButton
+            // 
+            this.removeStageButton.Image = global::HSDRawViewer.Properties.Resources.ts_subtract;
+            this.removeStageButton.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.removeStageButton.Name = "removeStageButton";
+            this.removeStageButton.Size = new System.Drawing.Size(102, 22);
+            this.removeStageButton.Text = "Remove Stage";
+            this.removeStageButton.Click += new System.EventHandler(this.removeStageButton_Click);
             // 
             // mapGOBJCopyButton
             // 
@@ -96,12 +118,14 @@
             // 
             // stageEditor
             // 
+            this.stageEditor.CanRemove = false;
             this.stageEditor.DisplayItemIndices = true;
             this.stageEditor.Dock = System.Windows.Forms.DockStyle.Fill;
             this.stageEditor.EnablePropertyViewDescription = true;
             this.stageEditor.ItemIndexOffset = 0;
             this.stageEditor.Location = new System.Drawing.Point(3, 3);
             this.stageEditor.Name = "stageEditor";
+            this.stageEditor.SelectionMode = System.Windows.Forms.SelectionMode.One;
             this.stageEditor.Size = new System.Drawing.Size(706, 343);
             this.stageEditor.TabIndex = 1;
             this.stageEditor.ArrayUpdated += new System.EventHandler(this.stageEditor_ArrayUpdated);
@@ -125,6 +149,7 @@
             this.stageIDEditor.ItemIndexOffset = 0;
             this.stageIDEditor.Location = new System.Drawing.Point(3, 3);
             this.stageIDEditor.Name = "stageIDEditor";
+            this.stageIDEditor.SelectionMode = System.Windows.Forms.SelectionMode.One;
             this.stageIDEditor.Size = new System.Drawing.Size(706, 343);
             this.stageIDEditor.TabIndex = 0;
             // 
@@ -149,12 +174,14 @@
         #endregion
 
         private System.Windows.Forms.ToolStrip toolStrip7;
-        private System.Windows.Forms.ToolStripButton saveStageButton;
         private System.Windows.Forms.ToolStripButton mapGOBJCopyButton;
         private System.Windows.Forms.TabControl stageTabControl;
         private System.Windows.Forms.TabPage tabPage5;
         private ArrayMemberEditor stageEditor;
         private System.Windows.Forms.TabPage tabPage6;
         private ArrayMemberEditor stageIDEditor;
+        private System.Windows.Forms.ToolStripButton exportStageButton;
+        private System.Windows.Forms.ToolStripButton importStageButton;
+        private System.Windows.Forms.ToolStripButton removeStageButton;
     }
 }
