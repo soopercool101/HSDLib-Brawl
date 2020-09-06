@@ -337,7 +337,7 @@ namespace HSDRaw
             if (!a.CanBeBuffer)
                 return false;
 
-            return (a.References.Count == 0 && a.Length > 0x40) || a.IsTextureBuffer;
+            return (a.References.Count == 0 && a.Length > 0x40) || a.IsBufferAligned;
         }
 
         //https://stackoverflow.com/questions/16340/how-do-i-generate-a-hashcode-from-a-byte-array-in-c/16381
@@ -387,7 +387,7 @@ namespace HSDRaw
             var toRemove = new List<HSDStruct>();
             foreach (var v in _structCache)
             {
-                if (IsBuffer(v) && !IsRoot(v))
+                if (v.CanBeDuplicate && IsBuffer(v) && !IsRoot(v))
                 {
                     var hash = ComputeHash(v.GetData());
                     if (hashToStruct.ContainsKey(hash))
@@ -849,6 +849,13 @@ namespace HSDRaw
                 a = acc;
             }
             else
+            if (rootString.StartsWith("effBehaviorTable"))
+            {
+                var acc = new MEX_EffectTypeLookup();
+                acc._s = str;
+                a = acc;
+            }
+            else
             if (rootString.StartsWith("eff"))
             {
                 var acc = new SBM_EffectTable();
@@ -917,13 +924,28 @@ namespace HSDRaw
                 acc._s = str;
                 a = acc;
             }
+            else
             if (rootString.StartsWith("SIS_"))
             {
                 var acc = new SBM_SISData();
                 acc._s = str;
                 a = acc;
             }
-
+            else
+            if (rootString.Equals("evMenu"))
+            {
+                var acc = new SBM_EventMenu();
+                acc._s = str;
+                a = acc;
+            }
+            else
+            if (rootString.Equals("lbBgFlashColAnimData"))
+            {
+                var acc = new HSDArrayAccessor<ftCommonColorEffect>();
+                acc._s = str;
+                a = acc;
+            }
+            
             return a;
         }
     }

@@ -18,6 +18,7 @@ using HSDRawViewer.Rendering.Shapes;
 using OpenTK;
 using HSDRawViewer.Rendering.Renderers;
 using System.ComponentModel;
+using HSDRaw.Melee.Cmd;
 
 namespace HSDRawViewer.GUI
 {
@@ -27,16 +28,20 @@ namespace HSDRawViewer.GUI
         {
             public HSDStruct _struct;
 
-            public string Text;
+            [Category("Animation"), DisplayName("Figatree Symbol")]
+            public string Text { get; set; }
 
-            public int AnimOffset;
-            public int AnimSize;
+            [Category("Animation"), DisplayName("Figatree Offset")]
+            public int AnimOffset { get; set; }
+
+            [Category("Animation"), DisplayName("Figatree FileSize")]
+            public int AnimSize { get; set; }
 
             public uint Flags;
             public int Index;
 
             [Category("Display Flags"), DisplayName("Flags")]
-            public string BitFlags { get => Flags.ToString("X"); set { uint v = Flags; uint.TryParse(value, out v); Flags = v; } }
+            public string BitFlags { get => Flags.ToString("X"); set { uint v = Flags; uint.TryParse(value, System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.CurrentCulture, out v); Flags = v; } }
 
             [Category("Flags"), DisplayName("Character ID")]
             public uint CharIDCheck { get => Flags & 0x3FF; set => Flags = (Flags & 0xFFFFFC00) | (value & 0x3FF); }
@@ -139,7 +144,7 @@ namespace HSDRawViewer.GUI
 
         public DockState DefaultDockState => DockState.Document;
 
-        public Type[] SupportedTypes => new Type[] { typeof(SBM_FighterCommandTable), typeof(SBM_FighterSubactionData), typeof(SBM_ItemSubactionData) };
+        public Type[] SupportedTypes => new Type[] { typeof(SBM_FighterCommandTable), typeof(SBM_FighterSubactionData), typeof(SBM_ItemSubactionData), typeof(SBM_ColorSubactionData) };
 
         public DataNode Node
         {
@@ -147,23 +152,14 @@ namespace HSDRawViewer.GUI
             set
             {
                 _node = value;
-                if (value.Accessor is SBM_ItemSubactionData suidata)
-                {
-                    SubactionGroup = SubactionGroup.Item;
-                    SBM_FighterCommand[] su = new SBM_FighterCommand[]
-                    {
-                        new SBM_FighterCommand()
-                        {
-                            SubAction = suidata,
-                            Name = "Script"
-                        }
-                    };
-
-                    LoadActions(su);
-                    RefreshActionList();
-                }else
                 if (value.Accessor is SBM_FighterSubactionData sudata)
                 {
+                    if (value.Accessor is SBM_ItemSubactionData)
+                        SubactionGroup = SubactionGroup.Item;
+
+                    if (value.Accessor is SBM_ColorSubactionData)
+                        SubactionGroup = SubactionGroup.Color;
+
                     SBM_FighterCommand[] su = new SBM_FighterCommand[]
                     {
                         new SBM_FighterCommand()
@@ -175,7 +171,9 @@ namespace HSDRawViewer.GUI
 
                     LoadActions(su);
                     RefreshActionList();
-                }else
+                    propertyGrid1.Visible = false;
+                }
+                else
                 if(value.Accessor is SBM_FighterCommandTable SubactionTable)
                 {
                     LoadActions(SubactionTable.Commands);
@@ -192,26 +190,23 @@ namespace HSDRawViewer.GUI
                             
                             ECB = plDat.EnvironmentCollision;
 
-                            if (plDat.ModelLookupTables != null)
-                            {
-                                var lowpolyStruct = plDat.ModelLookupTables
-                                    ?._s.GetReference<HSDAccessor>(0x04)
-                                    ?._s.GetReference<HSDAccessor>(0x04)
-                                    ?._s.GetReference<HSDAccessor>(0x04)?._s;
-
-                                var tab = lowpolyStruct?.GetReference<HSDAccessor>(0x04)?._s;
-
-                                if (lowpolyStruct != null && tab != null)
-                                {
-                                    for (int i = 0; i < lowpolyStruct.GetInt32(0); i++)
-                                    {
-                                        HiddenDOBJIndices.Add(tab.GetByte(i));
-                                    }
-                                }
-                            }
+                            SetModelVis(0, 0);
                         }
                     }
                 }
+            }
+        }
+
+        public SBM_FighterData FighterData
+        {
+            get
+            {
+                if (_node.Accessor is SBM_FighterCommandTable SubactionTable)
+                    if (Node.Parent is DataNode parent)
+                        if (parent.Accessor is SBM_FighterData plDat)
+                            return plDat;
+
+                return null;
             }
         }
 
@@ -962,8 +957,6 @@ namespace HSDRawViewer.GUI
 
         private HurtboxRenderer HurtboxRenderer = new HurtboxRenderer();
 
-        private List<int> HiddenDOBJIndices = new List<int>();
-
         private string AnimationName = "";
 
         /// <summary>
@@ -1005,12 +998,46 @@ namespace HSDRawViewer.GUI
 
             JOBJManager.ModelScale = ModelScale;
             JOBJManager.DOBJManager.HiddenDOBJs.Clear();
-            JOBJManager.HideDOBJs(HiddenDOBJIndices);
             JOBJManager.settings.RenderBones = false;
+
+            SetModelVis(0, 0);
 
             AJBuffer = System.IO.File.ReadAllBytes(aFile);
 
             previewBox.Visible = true;
+        }
+
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="structid"></param>
+        /// <param name="objectid"></param>
+        private void SetModelVis(int structid, int objectid)
+        {
+            var plDat = FighterData;
+
+            if (plDat.ModelLookupTables != null && JOBJManager.JointCount != 0)
+            {
+                var table = plDat.ModelLookupTables.LookupTables[structid];
+
+                var hidden = new List<int>();
+                for (int i = 0; i < JOBJManager.JointCount; i++)
+                    hidden.Add(i);
+
+                foreach (var t in table.Array)
+                {
+                    if (objectid > t.Count || t.LookupEntries == null)
+                        continue;
+
+                    var id = t.LookupEntries[objectid];
+                    foreach (var i in id.Entries)
+                        hidden.Remove(i);
+                }
+
+                JOBJManager.HideDOBJs(hidden);
+            }
         }
 
         /// <summary>

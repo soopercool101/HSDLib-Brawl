@@ -1,6 +1,7 @@
 ﻿using HSDRaw.Common;
 using HSDRaw.Common.Animation;
 using System.Drawing;
+using HSDRaw.Melee.Cmd;
 
 namespace HSDRaw.Melee
 {
@@ -8,14 +9,35 @@ namespace HSDRaw.Melee
     {
         public ftLoadCommandDataCommonAttributes CommonAttributes { get => _s.GetReference<ftLoadCommandDataCommonAttributes>(0x00); set => _s.SetReference(0x00, value); }
 
+        // x04
+
+        // x08
+
+        // x0C
 
         public HSDFixedLengthPointerArrayAccessor<SBM_BoneLookupTable> BoneTables { get => _s.GetReference<HSDFixedLengthPointerArrayAccessor<SBM_BoneLookupTable>>(0x10); set => _s.SetReference(0x10, value); }
 
         public HSDFixedLengthPointerArrayAccessor<SBM_PlCoUnknownFighterTable> FighterTable { get => _s.GetReference<HSDFixedLengthPointerArrayAccessor<SBM_PlCoUnknownFighterTable>>(0x14); set => _s.SetReference(0x14, value); }
 
+        public HSDArrayAccessor<ftCommonColorEffect> FighterColorAnims { get => _s.GetReference<HSDArrayAccessor<ftCommonColorEffect>>(0x18); set => _s.SetReference(0x18, value); }
 
+        public HSDArrayAccessor<ftCommonColorEffect> ColorAnimTable { get => _s.GetReference<HSDArrayAccessor<ftCommonColorEffect>>(0x1C); set => _s.SetReference(0x1C, value); }
+        
         public SBM_RespawnPlatform RespawnPlatform { get => _s.GetReference<SBM_RespawnPlatform>(0x20); set => _s.SetReference(0x20, value); }
 
+        // x24
+
+        // x28
+
+        // x2C
+
+        // x30
+
+        // x34
+
+        // x38
+
+        // x3C
 
         public HSD_JOBJ TrophyStandModel { get => _s.GetReference<HSD_JOBJ>(0x40); set => _s.SetReference(0x40, value); }
 
@@ -56,5 +78,16 @@ namespace HSDRaw.Melee
     public class ftLoadCommandDataCommonAttributes : HSDAccessor
     {
 
+    }
+
+    public class ftCommonColorEffect : HSDAccessor
+    {
+        public override int TrimmedSize => 0x08;
+
+        public SBM_ColorSubactionData SubactionData { get => _s.GetReference<SBM_ColorSubactionData>(0x00); set => _s.SetReference(0x00, value); }
+
+        public byte Priority { get => _s.GetByte(0x04); set => _s.SetByte(0x04, value); }
+
+        public byte EffectSlot { get => _s.GetByte(0x05); set => _s.SetByte(0x05, value); }
     }
 }

@@ -536,7 +536,7 @@ namespace HSDRawViewer.Rendering
                     Index = jobjToCache.Count,
                     InvertedTransform = world.Inverted()
                 };
-                if (root.Flags.HasFlag(JOBJ_FLAG.SKELETON) && root.InverseWorldTransform != null)
+                if (root.Flags.HasFlag(JOBJ_FLAG.SKELETON) || root.Flags.HasFlag(JOBJ_FLAG.SKELETON_ROOT) && root.InverseWorldTransform != null)
                 {
                     jcache.InvertedTransform = HSDMatrixToTKMatrix(root.InverseWorldTransform);
                 }
@@ -662,7 +662,8 @@ namespace HSDRawViewer.Rendering
         public void HideDOBJs(List<int> DOBJIndices)
         {
             var i = 0;
-            foreach(var j in RootJOBJ.BreathFirstList)
+            DOBJManager.HiddenDOBJs.Clear();
+            foreach (var j in RootJOBJ.BreathFirstList)
             {
                 if(j.Dobj != null)
                 {

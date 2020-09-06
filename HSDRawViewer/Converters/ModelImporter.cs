@@ -34,14 +34,14 @@ namespace HSDRawViewer.Converters
         public bool SmoothNormals { get; set; } = false;
         
 
-        [Category("Importing Options"), DisplayName("Import Bone Names"), Description("Stores bone names in JOBJs")]
+        [Category("Importing Options"), DisplayName("Import Bone Names"), Description("Stores bone names in JOBJs; not recommended")]
         public bool ImportBoneNames { get; set; } = false;
 
-        [Category("Importing Options"), DisplayName("Import Mesh Names"), Description("Stores mesh names in DOBJs")]
+        [Category("Importing Options"), DisplayName("Import Mesh Names"), Description("Stores mesh names in DOBJs; not recommended")]
         public bool ImportMeshNames { get; set; } = false;
 
 
-        [Category("Importing Options"), DisplayName("Use Triangle Strips"), Description("Slower to import, but better optimized for game")]
+        [Category("Importing Options"), DisplayName("Use Triangle Strips"), Description("Slower to import, but significantly better optimized for game")]
         public bool UseStrips { get; set; } = true;
         
         [Category("Importing Options"), DisplayName("Import Rigging"), Description("Import rigging from model file")]
@@ -52,13 +52,13 @@ namespace HSDRawViewer.Converters
         [Category("Material Options"), DisplayName("Import MOBJs"), Description("Imports .mobj files from file if found")]
         public bool ImportMOBJ { get; set; } = false;
 
-        [Category("Material Options"), DisplayName("Import Material Info"), Description("Imports the material info from model file. NOT recommended")]
+        [Category("Material Options"), DisplayName("Import Material Info"), Description("Imports the material info from model file. NOT recommended if you don't know what this is")]
         public bool ImportMaterialInfo { get; set; } = false;
 
-        [Category("Material Options"), DisplayName("Import Normals"), Description("")]
+        [Category("Material Options"), DisplayName("Import Normals"), Description("Imports normals from model file")]
         public bool ImportNormals { get; set; } = true;
 
-        [Category("Material Options"), DisplayName("Enable Diffuse"), Description("")]
+        [Category("Material Options"), DisplayName("Enable Diffuse"), Description("Enables DIFFUSE flag on materials")]
         public bool EnableDiffuse { get; set; } = true;
 
 
@@ -74,13 +74,13 @@ namespace HSDRawViewer.Converters
 
 
 
-        [Category("Texture Options"), DisplayName("Import Textures"), Description("Imports textures from model file if they exist.")]
+        [Category("Texture Options"), DisplayName("Import Textures"), Description("Imports textures from model file if they exist")]
         public bool ImportTexture { get; set; } = true;
 
-        [Category("Texture Options"), DisplayName("Texture Format"), Description("The format to store the texture data in.")]
+        [Category("Texture Options"), DisplayName("Texture Format"), Description("The format to store the texture data in")]
         public GXTexFmt TextureFormat { get; set; } = GXTexFmt.CI8;
 
-        [Category("Texture Options"), DisplayName("Palette Format"), Description("Palette format used with CI8 and CI4.")]
+        [Category("Texture Options"), DisplayName("Palette Format"), Description("Palette format used with CI8 and CI4")]
         public GXTlutFmt PaletteFormat { get; set; } = GXTlutFmt.RGB565;
     }
 
@@ -232,8 +232,11 @@ namespace HSDRawViewer.Converters
             {
                 ProcessMesh(scene, mesh, root);
 
-                ProgressStatus = $"Processing Mesh {root.Dobj.List.Count} {model.Meshes.Count + 1}...";
-                w.ReportProgress((int)(30 + 60 * (root.Dobj.List.Count / (float)model.Meshes.Count)));
+                if(root.Dobj != null)
+                {
+                    ProgressStatus = $"Processing Mesh {root.Dobj.List.Count} {model.Meshes.Count + 1}...";
+                    w.ReportProgress((int)(30 + 60 * (root.Dobj.List.Count / (float)model.Meshes.Count)));
+                }
             }
 
 
@@ -385,6 +388,11 @@ namespace HSDRawViewer.Converters
         private void ProcessMesh(IOScene scene, IOMesh mesh, HSD_JOBJ rootnode)
         {
             HSD_JOBJ parent = rootnode;
+            
+
+            if (mesh.ParentBone != null && _cache.NameToJOBJ.ContainsKey(mesh.ParentBone.Name))
+                parent = _cache.NameToJOBJ[mesh.ParentBone.Name];
+
 
             HSD_DOBJ root = null;
             HSD_DOBJ prev = null;
@@ -520,11 +528,14 @@ namespace HSDRawViewer.Converters
                     var tknrm = new Vector3(v.Normal.X, v.Normal.Y, v.Normal.Z);
                     var tktan = new Vector3(v.Tangent.X, v.Tangent.Y, v.Tangent.Z);
                     var tkbitan = new Vector3(v.Binormal.X, v.Binormal.Y, v.Binormal.Z);
+                    
+                    var parentTransform = _cache.jobjToWorldTransform[parent].Inverted();
+                    
+                    tkvert = Vector3.TransformPosition(tkvert, parentTransform);
+                    tknrm = Vector3.TransformNormal(tknrm, parentTransform).Normalized();
+                    tktan = Vector3.TransformNormal(tktan, parentTransform).Normalized();
+                    tkbitan = Vector3.TransformNormal(tkbitan, parentTransform).Normalized();
 
-                    tkvert = Vector3.TransformPosition(tkvert, _cache.jobjToWorldTransform[rootnode].Inverted());
-                    tknrm = Vector3.TransformNormal(tknrm, _cache.jobjToWorldTransform[rootnode].Inverted()).Normalized();
-                    tktan = Vector3.TransformNormal(tktan, _cache.jobjToWorldTransform[rootnode].Inverted()).Normalized();
-                    tkbitan = Vector3.TransformNormal(tkbitan, _cache.jobjToWorldTransform[rootnode].Inverted()).Normalized();
 
                     if (mesh.HasEnvelopes() && Settings.ImportRigging)
                     {
