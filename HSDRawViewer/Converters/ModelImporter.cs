@@ -47,8 +47,12 @@ namespace HSDRawViewer.Converters
         [Category("Importing Options"), DisplayName("Import Rigging"), Description("Import rigging from model file")]
         public bool ImportRigging { get; set; } = true;
 
-        
-        
+#if DEBUG
+        [Category("Debug Options"), DisplayName("Merge"), Description("")]
+        public bool Merge { get; set; } = false;
+#endif
+
+
         [Category("Material Options"), DisplayName("Import MOBJs"), Description("Imports .mobj files from file if found")]
         public bool ImportMOBJ { get; set; } = false;
 
@@ -63,13 +67,13 @@ namespace HSDRawViewer.Converters
 
 
 
-        [Category("Material Vertex Color Options"), DisplayName("Import Vertex Colors"), Description("")]
+        [Category("Vertex Color Options"), DisplayName("Import Vertex Colors"), Description("")]
         public bool ImportVertexColor { get; set; } = false;
 
-        [Category("Material Vertex Color Options"), DisplayName("Import Vertex Alpha"), Description("Import the alpha color from vertex colors")]
+        [Category("Vertex Color Options"), DisplayName("Import Vertex Alpha"), Description("Import the alpha color from vertex colors")]
         public bool ImportVertexAlpha { get; set; } = false;
 
-        [Category("Material Vertex Color Options"), DisplayName("Multiply by 2"), Description("Multiplies vertex colors by 2")]
+        [Category("Vertex Color Options"), DisplayName("Multiply by 2"), Description("Multiplies vertex colors by 2")]
         public bool MultiplyVertexColorBy2 { get; set; } = false;
 
 
@@ -272,6 +276,11 @@ namespace HSDRawViewer.Converters
             // update flags
             JOBJTools.UpdateJOBJFlags(NewModel);
 
+#if DEBUG
+            if (Settings.Merge)
+                JOBJTools.MergeIntoOneObject(NewModel);
+#endif
+
             ProgressStatus = "Done!";
             w.ReportProgress(100);
         }
@@ -466,10 +475,15 @@ namespace HSDRawViewer.Converters
                 List<GXAttribName> Attributes = new List<GXAttribName>();
 
                 if (mesh.HasEnvelopes() && Settings.ImportRigging && !singleBinded)
+                {
                     Attributes.Add(GXAttribName.GX_VA_PNMTXIDX);
 
-                if (hasReflection)
-                    Attributes.Add(GXAttribName.GX_VA_TEX0MTXIDX);
+                    if (hasReflection)
+                        Attributes.Add(GXAttribName.GX_VA_TEX0MTXIDX);
+
+                    if (hasReflection && dobj.Mobj.Textures != null && dobj.Mobj.Textures.List.Count > 1)
+                        Attributes.Add(GXAttribName.GX_VA_TEX1MTXIDX);
+                }
 
                 
                 Attributes.Add(GXAttribName.GX_VA_POS);

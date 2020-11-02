@@ -56,9 +56,9 @@
             this.hitboxInfoToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.interpolationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
+            this.ledgeGrabBoxToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.eCBToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.groundECH = new System.Windows.Forms.ToolStripMenuItem();
-            this.ledgeGrabBoxToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
             this.throwModelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.panel1 = new System.Windows.Forms.Panel();
@@ -74,6 +74,8 @@
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.createNewSubroutineToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.clearAllActionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator5 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.propertyGrid1 = new System.Windows.Forms.PropertyGrid();
             this.groupBox1.SuspendLayout();
             this.toolStrip2.SuspendLayout();
@@ -369,6 +371,13 @@
             this.toolStripSeparator3.Name = "toolStripSeparator3";
             this.toolStripSeparator3.Size = new System.Drawing.Size(178, 6);
             // 
+            // ledgeGrabBoxToolStripMenuItem
+            // 
+            this.ledgeGrabBoxToolStripMenuItem.CheckOnClick = true;
+            this.ledgeGrabBoxToolStripMenuItem.Name = "ledgeGrabBoxToolStripMenuItem";
+            this.ledgeGrabBoxToolStripMenuItem.Size = new System.Drawing.Size(181, 22);
+            this.ledgeGrabBoxToolStripMenuItem.Text = "Ledge Grab Box";
+            // 
             // eCBToolStripMenuItem
             // 
             this.eCBToolStripMenuItem.CheckOnClick = true;
@@ -384,13 +393,6 @@
             this.groundECH.Name = "groundECH";
             this.groundECH.Size = new System.Drawing.Size(181, 22);
             this.groundECH.Text = "Ground ECB";
-            // 
-            // ledgeGrabBoxToolStripMenuItem
-            // 
-            this.ledgeGrabBoxToolStripMenuItem.CheckOnClick = true;
-            this.ledgeGrabBoxToolStripMenuItem.Name = "ledgeGrabBoxToolStripMenuItem";
-            this.ledgeGrabBoxToolStripMenuItem.Size = new System.Drawing.Size(181, 22);
-            this.ledgeGrabBoxToolStripMenuItem.Text = "Ledge Grab Box";
             // 
             // toolStripSeparator4
             // 
@@ -501,7 +503,9 @@
             this.loadPlayerFilesToolStripMenuItem,
             this.toolStripSeparator2,
             this.createNewSubroutineToolStripMenuItem,
-            this.clearAllActionsToolStripMenuItem});
+            this.clearAllActionsToolStripMenuItem,
+            this.toolStripSeparator5,
+            this.toolStripMenuItem1});
             this.editDropDown.Image = ((System.Drawing.Image)(resources.GetObject("editDropDown.Image")));
             this.editDropDown.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.editDropDown.Name = "editDropDown";
@@ -533,6 +537,18 @@
             this.clearAllActionsToolStripMenuItem.Size = new System.Drawing.Size(218, 22);
             this.clearAllActionsToolStripMenuItem.Text = "Clear All Action\'s Scripts";
             this.clearAllActionsToolStripMenuItem.Click += new System.EventHandler(this.clearAllActionsToolStripMenuItem_Click);
+            // 
+            // toolStripSeparator5
+            // 
+            this.toolStripSeparator5.Name = "toolStripSeparator5";
+            this.toolStripSeparator5.Size = new System.Drawing.Size(215, 6);
+            // 
+            // toolStripMenuItem1
+            // 
+            this.toolStripMenuItem1.Name = "toolStripMenuItem1";
+            this.toolStripMenuItem1.Size = new System.Drawing.Size(218, 22);
+            this.toolStripMenuItem1.Text = "Export to Text";
+            this.toolStripMenuItem1.Click += new System.EventHandler(this.toolStripMenuItem1_Click);
             // 
             // propertyGrid1
             // 
@@ -618,5 +634,7 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator4;
         private System.Windows.Forms.ToolStripMenuItem modelToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem groundECH;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator5;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem1;
     }
 }

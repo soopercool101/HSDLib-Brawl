@@ -23,7 +23,7 @@ namespace HSDRaw.Melee.Pl
 
         public SBM_DynamicBehaviorIDs WinCommandDynamicBehaviors { get => _s.GetReference<SBM_DynamicBehaviorIDs>(0x18); set => _s.SetReference(0x18, value); }
 
-        public SBM_ModelPartTable ModelPartAnimations { get => _s.GetReference<SBM_ModelPartTable>(0x1C); set => _s.SetReference(0x1C, value); }
+        public HSDFixedLengthPointerArrayAccessor<SBM_ModelPart> ModelPartAnimations { get => _s.GetReference<HSDFixedLengthPointerArrayAccessor<SBM_ModelPart>>(0x1C); set => _s.SetReference(0x1C, value); }
         
         public SBM_ShieldModelContainer ShieldPoseContainer { get => _s.GetReference<SBM_ShieldModelContainer>(0x20); set => _s.SetReference(0x20, value); }
 
@@ -55,7 +55,7 @@ namespace HSDRaw.Melee.Pl
 
         public HSDAccessor Unknown0x58 { get => _s.GetReference<HSDAccessor>(0x58); set => _s.SetReference(0x58, value); }
 
-        public HSD_JOBJ ShadowModel { get => _s.GetReference<HSD_JOBJ>(0x5C); set => _s.SetReference(0x5C, value); }
+        public HSD_JOBJ MetalModel { get => _s.GetReference<HSD_JOBJ>(0x5C); set => _s.SetReference(0x5C, value); }
 
     }
 
