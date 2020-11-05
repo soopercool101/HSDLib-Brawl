@@ -386,8 +386,11 @@ namespace HSDRawViewer.Rendering
             shader.SetBoolToInt("hasTEX1", mobj.RenderFlags.HasFlag(RENDER_MODE.TEX1) || enableAll);
             shader.SetBoolToInt("hasTEX2", mobj.RenderFlags.HasFlag(RENDER_MODE.TEX2) || enableAll);
             shader.SetBoolToInt("hasTEX3", mobj.RenderFlags.HasFlag(RENDER_MODE.TEX3) || enableAll);
-            
+
             //LoadTextureConstants(shader);
+
+            // these are always uniform
+            GL.Uniform1(GL.GetUniformLocation(shader.programId, "textures"), 4, new int[] { 0, 1, 2, 3 });
 
             // Bind Textures
             if (mobj.Textures != null)
@@ -457,7 +460,7 @@ namespace HSDRawViewer.Rendering
                     int colorOP = ((int)flags >> 16) & 0xF;
                     int alphaOP = ((int)flags >> 20) & 0xF;
                     
-                    shader.SetInt($"TEX{i}.tex", i);
+                    shader.SetInt($"TEX{i}.texIndex", i);
                     shader.SetInt($"TEX{i}.light_type", lightType);
                     shader.SetInt($"TEX{i}.color_operation", colorOP);
                     shader.SetInt($"TEX{i}.alpha_operation", alphaOP);
@@ -502,7 +505,7 @@ namespace HSDRawViewer.Rendering
             var transform = Matrix4.Identity;
             for (int i = 0; i < 4; i++)
             {
-                shader.SetInt($"TEX{i}.tex", 0);
+                shader.SetInt($"TEX{i}.texIndex", 0);
                 shader.SetInt($"TEX{i}.light_type", 0);
                 shader.SetInt($"TEX{i}.color_operation", 0);
                 shader.SetInt($"TEX{i}.alpha_operation", 0);
