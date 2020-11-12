@@ -113,6 +113,14 @@ namespace HSDRawViewer.GUI.Plugins
 
         private class DOBJContainer
         {
+            public enum CullMode
+            {
+                None,
+                Front,
+                Back,
+                FrontAndBack
+            }
+
             public int Index;
             public int JOBJIndex;
             public int DOBJIndex;
@@ -133,6 +141,48 @@ namespace HSDRawViewer.GUI.Plugins
             public float Shinniness { get => DOBJ.Mobj.Material.Shininess; set => DOBJ.Mobj.Material.Shininess = value; }
 
             public float Alpha { get => DOBJ.Mobj.Material.Alpha; set => DOBJ.Mobj.Material.Alpha = value; }
+            
+            public CullMode Culling
+            {
+                get
+                {
+                    if (DOBJ.Pobj == null)
+                        return CullMode.None;
+                    else
+                    {
+                        if (DOBJ.Pobj.Flags.HasFlag(POBJ_FLAG.CULLBACK) && DOBJ.Pobj.Flags.HasFlag(POBJ_FLAG.CULLFRONT))
+                            return CullMode.FrontAndBack;
+
+                        if (DOBJ.Pobj.Flags.HasFlag(POBJ_FLAG.CULLBACK))
+                            return CullMode.Back;
+
+                        if (DOBJ.Pobj.Flags.HasFlag(POBJ_FLAG.CULLFRONT))
+                            return CullMode.Front;
+
+                        return CullMode.None;
+                    }
+                }
+                set
+                {
+                    if(DOBJ.Pobj != null)
+                        foreach (var p in DOBJ.Pobj.List)
+                        {
+                            p.Flags &= ~(POBJ_FLAG.CULLBACK | POBJ_FLAG.CULLFRONT);
+                            switch (value)
+                            {
+                                case CullMode.FrontAndBack:
+                                    p.Flags |= POBJ_FLAG.CULLBACK | POBJ_FLAG.CULLFRONT;
+                                    break;
+                                case CullMode.Front:
+                                    p.Flags |= POBJ_FLAG.CULLFRONT;
+                                    break;
+                                case CullMode.Back:
+                                    p.Flags |= POBJ_FLAG.CULLBACK;
+                                    break;
+                            }
+                        }
+                }
+            }
 
             [Browsable(false)]
             public int PolygonCount { get => DOBJ.Pobj != null ? DOBJ.Pobj.List.Count : 0; }
@@ -732,7 +782,7 @@ namespace HSDRawViewer.GUI.Plugins
         /// <param name="e"></param>
         private void importFromFileToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var f = Tools.FileIO.OpenFile("FigaTree/AnimJoint/MayaAnim/EightingMOT (*.dat*.anim*.mota*.gnta)|*.dat;*.anim;*.mota;*.gnta;*.chr0");
+            var f = Tools.FileIO.OpenFile("FigaTree/AnimJoint/MayaAnim/EightingMOT (*.dat*.anim*.mota*.gnta*.xml)|*.dat;*.anim;*.mota;*.gnta;*.chr0;*.xml");
 
             if (f != null)
             {
@@ -741,7 +791,8 @@ namespace HSDRawViewer.GUI.Plugins
                     LoadAnimation(CHR0Converter.LoadCHR0(f, BoneLabelMap));
                 }
                 else
-                if (Path.GetExtension(f).ToLower().Equals(".mota") || Path.GetExtension(f).ToLower().Equals(".gnta"))
+                if (Path.GetExtension(f).ToLower().Equals(".mota") || Path.GetExtension(f).ToLower().Equals(".gnta") ||
+                    (Path.GetExtension(f).ToLower().Equals(".xml") && MOT_FILE.IsMotXML(f)))
                 {
                     var jointTable = Tools.FileIO.OpenFile("Joint Connector Value (*.jcv)|*.jcv");
 
@@ -896,6 +947,21 @@ namespace HSDRawViewer.GUI.Plugins
 
             MOT_FILE file = anim.GetMOT();
             file.Save(f);
+        }
+
+        private void xmlToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (JOBJManager.Animation == null || !(JOBJManager.Animation is MotAnimManager))
+            {
+                MessageBox.Show("No mot animation is loaded", "Error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                return;
+            }
+
+            MotAnimManager anim = (MotAnimManager)(JOBJManager.Animation);
+            var f = Tools.FileIO.SaveFile("XML|*.xml;");
+
+            MOT_FILE file = anim.GetMOT();
+            file.ExportXML(f);
         }
 
         /// <summary>
