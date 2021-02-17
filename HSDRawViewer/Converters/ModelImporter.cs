@@ -13,6 +13,7 @@ using IONET.Core.Skeleton;
 using IONET.Core;
 using IONET.Core.Model;
 using System.Linq;
+using System.Windows.Forms;
 
 namespace HSDRawViewer.Converters
 {
@@ -21,6 +22,9 @@ namespace HSDRawViewer.Converters
     /// </summary>
     public class ModelImportSettings
     {
+        [Category("Importing Options"), DisplayName("Classical Scaling"), Description("Leave this true if you don't know what it is.")]
+        public bool ClassicalScaling { get; set; } = true;
+
         [Category("Importing Options"), DisplayName("Flip Faces"), Description("Flips direction of faces, useful if model imports inside out")]
         public bool FlipFaces { get; set; } = false;
 
@@ -50,6 +54,12 @@ namespace HSDRawViewer.Converters
 #if DEBUG
         [Category("Debug Options"), DisplayName("Merge"), Description("")]
         public bool Merge { get; set; } = false;
+
+        [Category("Debug Options"), DisplayName("Metal Model"), Description("")]
+        public bool MetalModel { get; set; } = false;
+
+        [Category("Debug Options"), DisplayName("Clean Root Node"), Description("")]
+        public bool CleanRoot { get; set; } = false;
 #endif
 
 
@@ -65,12 +75,15 @@ namespace HSDRawViewer.Converters
         [Category("Material Options"), DisplayName("Enable Diffuse"), Description("Enables DIFFUSE flag on materials")]
         public bool EnableDiffuse { get; set; } = true;
 
+        [Category("Material Options"), DisplayName("Enable Constant"), Description("Enables CONSTANT flag on materials. Material will have constant color.")]
+        public bool EnableConstant { get; set; } = false;
 
 
-        [Category("Vertex Color Options"), DisplayName("Import Vertex Colors"), Description("")]
+
+        [Category("Vertex Color Options"), DisplayName("Import Vertex Colors"), Description("Enables importing of vertex colors")]
         public bool ImportVertexColor { get; set; } = false;
 
-        [Category("Vertex Color Options"), DisplayName("Import Vertex Alpha"), Description("Import the alpha color from vertex colors")]
+        [Category("Vertex Color Options"), DisplayName("Import Vertex Alpha"), Description("Import the alpha channel from vertex colors")]
         public bool ImportVertexAlpha { get; set; } = false;
 
         [Category("Vertex Color Options"), DisplayName("Multiply by 2"), Description("Multiplies vertex colors by 2")]
@@ -105,7 +118,10 @@ namespace HSDRawViewer.Converters
         
         // Indicates jobjs that need the SKELETON flag set along with inverted transform
         public List<HSD_JOBJ> EnvelopedJOBJs = new List<HSD_JOBJ>();
-        
+
+        // for cleaning root
+        public Matrix4 CleanRotMatrix = Matrix4.Identity;
+
         // 
         public Dictionary<HSD_JOBJ, Matrix4> jobjToWorldTransform = new Dictionary<HSD_JOBJ, Matrix4>();
 
@@ -146,7 +162,7 @@ namespace HSDRawViewer.Converters
                         ImportSettings ioSettings = new ImportSettings()
                         {
                             FlipUVs = settings.FlipUVs,
-                            FlipWindingOrder = settings.FlipFaces,
+                            FlipWindingOrder = !settings.FlipFaces,
                             SmoothNormals = settings.SmoothNormals,
                             Triangulate = true,
                             //WeightLimit = true,
@@ -187,6 +203,22 @@ namespace HSDRawViewer.Converters
         /// <param name="w"></param>
         public override void Work(BackgroundWorker w)
         {
+            try
+            {
+                Import(w);
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show($"Failed to import model: {e.ToString()}");
+                w.ReportProgress(100);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void Import(BackgroundWorker w)
+        {
             // settings
             if (Settings == null)
                 Settings = new ModelImportSettings();
@@ -197,7 +229,7 @@ namespace HSDRawViewer.Converters
             _cache.POBJGen.UseTriangleStrips = Settings.UseStrips;
             _cache.POBJGen.UseVertexAlpha = Settings.ImportVertexAlpha;
             _cache.FolderPath = Path.GetDirectoryName(FilePath);
-            
+
 
             // import model
             ProgressStatus = "Importing Model Data...";
@@ -210,25 +242,25 @@ namespace HSDRawViewer.Converters
             ProgressStatus = "Processing Joints...";
             w.ReportProgress(30);
             HSD_JOBJ root = null;
-            foreach(var r in model.Skeleton.RootBones)
+            foreach (var r in model.Skeleton.RootBones)
             {
                 if (root == null)
                     root = IOBoneToJOBJ(r);
                 else
                     root.Add(IOBoneToJOBJ(r));
             }
-            if(root == null)
+            if (root == null)
             {
                 root = IOBoneToJOBJ(
-                    new IOBone() {
-                    Name = "Root"
-                });
+                    new IOBone()
+                    {
+                        Name = "Root"
+                    });
             }
 
 
             // get root of skeleton
             root.Flags = JOBJ_FLAG.SKELETON_ROOT;
-            
 
             // process mesh
             ProgressStatus = "Processing Mesh...";
@@ -236,7 +268,7 @@ namespace HSDRawViewer.Converters
             {
                 ProcessMesh(scene, mesh, root);
 
-                if(root.Dobj != null)
+                if (root.Dobj != null)
                 {
                     ProgressStatus = $"Processing Mesh {root.Dobj.List.Count} {model.Meshes.Count + 1}...";
                     w.ReportProgress((int)(30 + 60 * (root.Dobj.List.Count / (float)model.Meshes.Count)));
@@ -247,14 +279,13 @@ namespace HSDRawViewer.Converters
             // set flags
             if (_cache.EnvelopedJOBJs.Count > 0)
                 root.Flags |= JOBJ_FLAG.ENVELOPE_MODEL;
-            
+
             // enable xlu if anything needs it
             if (_cache.HasXLU)
                 root.Flags |= JOBJ_FLAG.XLU | JOBJ_FLAG.TEXEDGE;
 
             // just always enable opaque
             root.Flags |= JOBJ_FLAG.OPA;
-
 
             // calculate inverse binds
             foreach (var jobj in _cache.EnvelopedJOBJs)
@@ -263,7 +294,7 @@ namespace HSDRawViewer.Converters
                 if (_cache.jobjToWorldTransform.ContainsKey(jobj))
                     jobj.InverseWorldTransform = Matrix4ToHSDMatrix(_cache.jobjToWorldTransform[jobj].Inverted());
             }
-            
+
 
             // SAVE POBJ buffers
             ProgressStatus = "Generating and compressing vertex buffers...";
@@ -274,11 +305,15 @@ namespace HSDRawViewer.Converters
             NewModel = root;
 
             // update flags
-            JOBJTools.UpdateJOBJFlags(NewModel);
+            JOBJExtensions.UpdateJOBJFlags(NewModel);
+
+            if (Settings.ClassicalScaling)
+                NewModel.Flags |= JOBJ_FLAG.CLASSICAL_SCALING;
 
 #if DEBUG
+            //
             if (Settings.Merge)
-                JOBJTools.MergeIntoOneObject(NewModel);
+                JOBJExtensions.MergeIntoOneObject(NewModel);
 #endif
 
             ProgressStatus = "Done!";
@@ -292,6 +327,27 @@ namespace HSDRawViewer.Converters
         /// <returns></returns>
         private HSD_JOBJ IOBoneToJOBJ(IOBone bone)
         {
+#if DEBUG
+            //
+            if (Settings.CleanRoot)
+            {
+                if (bone.Parent == null)
+                {
+                    _cache.CleanRotMatrix = Matrix4.CreateFromQuaternion(new Quaternion(bone.Rotation.X, bone.Rotation.Y, bone.Rotation.Z, bone.Rotation.W));
+                    bone.Rotation = System.Numerics.Quaternion.Identity;
+                }
+                else
+                {
+                    // fix position
+                    var pos = Vector3.TransformNormal(new Vector3(bone.TranslationX, bone.TranslationY, bone.TranslationZ), _cache.CleanRotMatrix);
+                    bone.Translation = new System.Numerics.Vector3(pos.X, pos.Y, pos.Z);
+                }
+
+                // clean scale
+                bone.Scale = new System.Numerics.Vector3(1, 1, 1);
+            }
+#endif
+
             HSD_JOBJ jobj = new HSD_JOBJ()
             {
                 TX = bone.TranslationX,
@@ -307,6 +363,9 @@ namespace HSDRawViewer.Converters
 
             if (Settings.ImportBoneNames)
                 jobj.ClassName = bone.Name;
+
+
+            Console.WriteLine(bone.Name + " " + bone.WorldTransform);
 
             _cache.NameToJOBJ.Add(bone.Name, jobj);
             _cache.jobjToWorldTransform.Add(jobj, MatrixNumericsToTKMatrix(bone.WorldTransform));
@@ -397,6 +456,10 @@ namespace HSDRawViewer.Converters
         private void ProcessMesh(IOScene scene, IOMesh mesh, HSD_JOBJ rootnode)
         {
             HSD_JOBJ parent = rootnode;
+
+            HashSet<HSD_JOBJ> nodes = new HashSet<HSD_JOBJ>();
+            foreach(var j in rootnode.BreathFirstList)
+                nodes.Add(j);
             
 
             if (mesh.ParentBone != null && _cache.NameToJOBJ.ContainsKey(mesh.ParentBone.Name))
@@ -406,7 +469,7 @@ namespace HSDRawViewer.Converters
             HSD_DOBJ root = null;
             HSD_DOBJ prev = null;
 
-            var skeleton = rootnode.BreathFirstList;
+            //var skeleton = rootnode.BreathFirstList;
             Console.WriteLine("Processing " + mesh.Name);
 
             bool singleBinded = mesh.Name.Contains("SINGLE");
@@ -454,8 +517,12 @@ namespace HSDRawViewer.Converters
                 var hasBump = false;
 
                 // Assess needed attributes based on the material MOBJ
-                if (mesh.Name.Contains("REFLECTIVE"))
+                if (mesh.Name.Contains("REFLECTIVE") )
                     hasReflection = true;
+#if DEBUG
+                if(Settings.MetalModel)
+                    hasReflection = true;
+#endif
 
                 if (mesh.Name.Contains("BUMP"))
                     hasBump = true;
@@ -479,10 +546,17 @@ namespace HSDRawViewer.Converters
                     Attributes.Add(GXAttribName.GX_VA_PNMTXIDX);
 
                     if (hasReflection)
+                    {
                         Attributes.Add(GXAttribName.GX_VA_TEX0MTXIDX);
 
-                    if (hasReflection && dobj.Mobj.Textures != null && dobj.Mobj.Textures.List.Count > 1)
-                        Attributes.Add(GXAttribName.GX_VA_TEX1MTXIDX);
+                        if (dobj.Mobj.Textures != null && dobj.Mobj.Textures.List.Count > 1)
+                            Attributes.Add(GXAttribName.GX_VA_TEX1MTXIDX);
+
+#if DEBUG
+                        if (Settings.MetalModel && !Attributes.Contains(GXAttribName.GX_VA_TEX1MTXIDX))
+                            Attributes.Add(GXAttribName.GX_VA_TEX1MTXIDX);
+#endif
+                    }
                 }
 
                 
@@ -545,22 +619,53 @@ namespace HSDRawViewer.Converters
                     
                     var parentTransform = _cache.jobjToWorldTransform[parent].Inverted();
                     
-                    tkvert = Vector3.TransformPosition(tkvert, parentTransform);
-                    tknrm = Vector3.TransformNormal(tknrm, parentTransform).Normalized();
-                    tktan = Vector3.TransformNormal(tktan, parentTransform).Normalized();
-                    tkbitan = Vector3.TransformNormal(tkbitan, parentTransform).Normalized();
+                    if(_cache.jobjToWorldTransform[parent] != Matrix4.Identity)
+                    {
+                        tkvert = Vector3.TransformPosition(tkvert, parentTransform);
+                        tknrm = Vector3.TransformNormal(tknrm, parentTransform).Normalized();
+                        tktan = Vector3.TransformNormal(tktan, parentTransform).Normalized();
+                        tkbitan = Vector3.TransformNormal(tkbitan, parentTransform).Normalized();
+                    }
 
 
                     if (mesh.HasEnvelopes() && Settings.ImportRigging)
                     {
                         // create weighting lists
-                        jobjList.Add(v.Envelope.Weights.Select(e => _cache.NameToJOBJ[e.BoneName]).ToArray());
-                        weightList.Add(v.Envelope.Weights.Select(e => e.Weight).ToArray());
-                        
-                        // indicate enveloped jobjs
-                        foreach (var bw in v.Envelope.Weights)
-                            if (!_cache.EnvelopedJOBJs.Contains(_cache.NameToJOBJ[bw.BoneName]))
-                                _cache.EnvelopedJOBJs.Add(_cache.NameToJOBJ[bw.BoneName]);
+                        List<float> weight = new List<float>();
+                        List<HSD_JOBJ> bones = new List<HSD_JOBJ>();
+
+                        if(v.Envelope.Weights.Count == 0)
+                        {
+                            weight.Add(1);
+                            bones.Add(rootnode);
+                        }
+
+                        if (v.Envelope.Weights.Count > 4)
+                        {
+                            throw new Exception($"Too many weights! {v.Envelope.Weights.Count} in {mesh.Name}");
+                        }
+
+                        foreach(var bw in v.Envelope.Weights)
+                        {
+                            // check if skeleton actually contains bone
+                            if(_cache.NameToJOBJ.ContainsKey(bw.BoneName) && nodes.Contains(_cache.NameToJOBJ[bw.BoneName]))
+                            {
+                                // add envelope
+                                bones.Add(_cache.NameToJOBJ[bw.BoneName]);
+                                weight.Add(bw.Weight);
+
+                                // indicate enveloped jobjs
+                                if (!_cache.EnvelopedJOBJs.Contains(_cache.NameToJOBJ[bw.BoneName]))
+                                    _cache.EnvelopedJOBJs.Add(_cache.NameToJOBJ[bw.BoneName]);
+                            }
+                            else
+                            {
+                                throw new Exception($"Bone not found \"{bw.BoneName}\" Weight: {bw.Weight} in {mesh.Name}");
+                            }
+                        }
+
+                        jobjList.Add(bones.ToArray());
+                        weightList.Add(weight.ToArray());
 
                         // invert single binds
                         if (v.Envelope.Weights.Count == 1)
@@ -688,6 +793,9 @@ namespace HSDRawViewer.Converters
 
             if (Settings.EnableDiffuse)
                 Mobj.RenderFlags |= RENDER_MODE.DIFFUSE;
+
+            if (Settings.EnableConstant)
+                Mobj.RenderFlags |= RENDER_MODE.CONSTANT;
 
             // Properties
             if (material != null && Settings.ImportMaterialInfo)

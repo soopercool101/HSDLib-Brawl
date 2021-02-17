@@ -19,7 +19,7 @@ namespace HSDRawViewer.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resources {
@@ -57,6 +57,16 @@ namespace HSDRawViewer.Properties {
             }
             set {
                 resourceCulture = value;
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap back_checker {
+            get {
+                object obj = ResourceManager.GetObject("back_checker", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
         
@@ -143,6 +153,16 @@ namespace HSDRawViewer.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap ico_file {
+            get {
+                object obj = ResourceManager.GetObject("ico_file", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap ico_fobj {
             get {
                 object obj = ResourceManager.GetObject("ico_fobj", resourceCulture);
@@ -176,6 +196,16 @@ namespace HSDRawViewer.Properties {
         internal static System.Drawing.Bitmap ico_group {
             get {
                 object obj = ResourceManager.GetObject("ico_group", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ico_hatchling {
+            get {
+                object obj = ResourceManager.GetObject("ico_hatchling", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -333,6 +363,16 @@ namespace HSDRawViewer.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap iso_disc {
+            get {
+                object obj = ResourceManager.GetObject("iso_disc", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap melee_font {
             get {
                 object obj = ResourceManager.GetObject("melee_font", resourceCulture);
@@ -346,6 +386,16 @@ namespace HSDRawViewer.Properties {
         internal static System.Drawing.Bitmap ts_add {
             get {
                 object obj = ResourceManager.GetObject("ts_add", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ts_check {
+            get {
+                object obj = ResourceManager.GetObject("ts_check", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -436,6 +486,16 @@ namespace HSDRawViewer.Properties {
         internal static System.Drawing.Bitmap ts_up {
             get {
                 object obj = ResourceManager.GetObject("ts_up", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ts_x {
+            get {
+                object obj = ResourceManager.GetObject("ts_x", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

@@ -99,8 +99,8 @@ namespace HSDRaw.Tools
                     p1 = key.Value,
                     d0 = key.Tan,
                     d1 = key.Tan,
-                    op = GXInterpolationType.HSD_A_OP_CON,
-                    op_intrp = GXInterpolationType.HSD_A_OP_CON
+                    op = key.InterpolationType,
+                    op_intrp = key.InterpolationType
                 };
             }
 
@@ -211,6 +211,44 @@ namespace HSDRaw.Tools
                 return AnimationInterpolationHelper.SplineGetHermite(1 / (state.t1 - state.t0), FrameDiff, state.p0, state.p1, state.d0, state.d1);
 
             return state.p0;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="index"></param>
+        public void AutoTangent(int index)
+        {
+            if (index < 0 || index > Keys.Count - 1)
+                return;
+
+            if (Keys[index].InterpolationType != GXInterpolationType.HSD_A_OP_SPL)
+                return;
+
+            if (index == 0 || index == Keys.Count - 1)
+            {
+                Keys[index].Tan = 0;
+                return;
+            }
+
+            var prev = Keys[index - 1];
+            var current = Keys[index];
+            var next = Keys[index + 1];
+            float weightCount = 0;
+            float tangent = 0;
+            {
+                tangent += (current.Value - prev.Value) / (current.Frame - prev.Frame);
+                weightCount++;
+            }
+            {
+                tangent += (next.Value - current.Value) / (next.Frame - current.Frame);
+                weightCount++;
+            }
+
+            if (weightCount > 0)
+                tangent /= weightCount;
+
+            current.Tan = tangent;
         }
     }
     

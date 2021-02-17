@@ -33,6 +33,8 @@
             this.panel1 = new System.Windows.Forms.Panel();
             this.nudFrame = new System.Windows.Forms.NumericUpDown();
             this.numericUpDown1 = new System.Windows.Forms.NumericUpDown();
+            this.label4 = new System.Windows.Forms.Label();
+            this.label3 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.keyProperty = new System.Windows.Forms.PropertyGrid();
@@ -46,6 +48,8 @@
             this.importKeyButton = new System.Windows.Forms.ToolStripButton();
             this.exportKeyButton = new System.Windows.Forms.ToolStripButton();
             this.helpButton = new System.Windows.Forms.ToolStripButton();
+            this.buttonBakeTrack = new System.Windows.Forms.ToolStripButton();
+            this.buttonCompressTrack = new System.Windows.Forms.ToolStripButton();
             this.splitter1 = new System.Windows.Forms.Splitter();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.splitter2 = new System.Windows.Forms.Splitter();
@@ -80,6 +84,8 @@
             // 
             this.panel1.Controls.Add(this.nudFrame);
             this.panel1.Controls.Add(this.numericUpDown1);
+            this.panel1.Controls.Add(this.label4);
+            this.panel1.Controls.Add(this.label3);
             this.panel1.Controls.Add(this.label2);
             this.panel1.Controls.Add(this.label1);
             this.panel1.Dock = System.Windows.Forms.DockStyle.Top;
@@ -119,6 +125,24 @@
             0});
             this.numericUpDown1.ValueChanged += new System.EventHandler(this.numericUpDown1_ValueChanged);
             // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(390, 11);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(13, 13);
+            this.label4.TabIndex = 5;
+            this.label4.Text = "0";
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(311, 11);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(82, 13);
+            this.label3.TabIndex = 5;
+            this.label3.Text = "Value At Frame:";
+            // 
             // label2
             // 
             this.label2.AutoSize = true;
@@ -157,7 +181,9 @@
             this.deleteKeyButton,
             this.importKeyButton,
             this.exportKeyButton,
-            this.helpButton});
+            this.helpButton,
+            this.buttonBakeTrack,
+            this.buttonCompressTrack});
             this.toolStrip1.Location = new System.Drawing.Point(0, 152);
             this.toolStrip1.Name = "toolStrip1";
             this.toolStrip1.Size = new System.Drawing.Size(727, 25);
@@ -249,6 +275,26 @@
             this.helpButton.Size = new System.Drawing.Size(52, 22);
             this.helpButton.Text = "Help";
             this.helpButton.Click += new System.EventHandler(this.helpButton_Click);
+            // 
+            // buttonBakeTrack
+            // 
+            this.buttonBakeTrack.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.buttonBakeTrack.Image = ((System.Drawing.Image)(resources.GetObject("buttonBakeTrack.Image")));
+            this.buttonBakeTrack.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.buttonBakeTrack.Name = "buttonBakeTrack";
+            this.buttonBakeTrack.Size = new System.Drawing.Size(36, 22);
+            this.buttonBakeTrack.Text = "Bake";
+            this.buttonBakeTrack.Click += new System.EventHandler(this.buttonBakeTrack_Click);
+            // 
+            // buttonCompressTrack
+            // 
+            this.buttonCompressTrack.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.buttonCompressTrack.Image = ((System.Drawing.Image)(resources.GetObject("buttonCompressTrack.Image")));
+            this.buttonCompressTrack.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.buttonCompressTrack.Name = "buttonCompressTrack";
+            this.buttonCompressTrack.Size = new System.Drawing.Size(64, 22);
+            this.buttonCompressTrack.Text = "Compress";
+            this.buttonCompressTrack.Click += new System.EventHandler(this.buttonCompressTrack_Click);
             // 
             // splitter1
             // 
@@ -395,5 +441,9 @@
         private System.Windows.Forms.ToolStripMenuItem showAllTracksToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem showFrameTicksToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem showTangentsToolStripMenuItem;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.ToolStripButton buttonBakeTrack;
+        private System.Windows.Forms.ToolStripButton buttonCompressTrack;
     }
 }
