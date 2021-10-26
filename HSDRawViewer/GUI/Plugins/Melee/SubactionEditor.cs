@@ -7,18 +7,23 @@ using WeifenLuo.WinFormsUI.Docking;
 using System.Drawing;
 using HSDRawViewer.Tools;
 using System.Linq;
-using HSDRawViewer.Rendering;
 using HSDRaw.Melee.Cmd;
 using System.IO;
-using HSDRawViewer.GUI.Extra;
+using HSDRawViewer.Rendering;
+using HSDRawViewer.GUI.Controls;
+using HSDRaw.AirRide.Rd;
 
 namespace HSDRawViewer.GUI.Plugins.Melee
 {
-    public partial class SubactionEditor : DockContent, EditorBase
+    [SupportedTypes(new Type[] { 
+        typeof(SBM_FighterActionTable), 
+        typeof(SBM_FighterSubactionData), 
+        typeof(SBM_ItemSubactionData), 
+        typeof(SBM_ColorSubactionData),
+        typeof(KAR_RdScript) })]
+    public partial class SubactionEditor : DockContent, SaveableEditorBase
     {
         public DockState DefaultDockState => DockState.Document;
-
-        public Type[] SupportedTypes => new Type[] { typeof(SBM_FighterCommandTable), typeof(SBM_FighterSubactionData), typeof(SBM_ItemSubactionData), typeof(SBM_ColorSubactionData) };
 
         public DataNode Node
         {
@@ -34,9 +39,12 @@ namespace HSDRawViewer.GUI.Plugins.Melee
                     if (value.Accessor is SBM_ColorSubactionData)
                         SubactionGroup = SubactionGroup.Color;
 
-                    SBM_FighterCommand[] su = new SBM_FighterCommand[]
+                    if (value.Accessor is KAR_RdScript)
+                        SubactionGroup = SubactionGroup.Rider;
+
+                    SBM_FighterAction[] su = new SBM_FighterAction[]
                     {
-                        new SBM_FighterCommand()
+                        new SBM_FighterAction()
                         {
                             SubAction = sudata,
                             Name = "Script"
@@ -51,7 +59,7 @@ namespace HSDRawViewer.GUI.Plugins.Melee
                     propertyGrid1.Visible = false;
                 }
                 else
-                if(value.Accessor is SBM_FighterCommandTable SubactionTable)
+                if(value.Accessor is SBM_FighterActionTable SubactionTable)
                 {
                     LoadActions(SubactionTable.Commands);
                     RefreshActionList();
@@ -78,7 +86,7 @@ namespace HSDRawViewer.GUI.Plugins.Melee
         {
             get
             {
-                if (_node.Accessor is SBM_FighterCommandTable SubactionTable)
+                if (_node.Accessor is SBM_FighterActionTable SubactionTable)
                     if (Node.Parent is DataNode parent)
                         if (parent.Accessor is SBM_FighterData plDat)
                             return plDat;
@@ -119,8 +127,15 @@ namespace HSDRawViewer.GUI.Plugins.Melee
 
             FormClosing += (sender, args) =>
             {
-                SaveFile();
-                JOBJManager.CleanupRendering();
+                // if animation stuff is loaded save changes
+                if (previewBox.Visible)
+                {
+                    if (MessageBox.Show("Save Fighter DAT and Animation Changes?", "Save Changes", MessageBoxButtons.YesNoCancel) == DialogResult.Yes)
+                    {
+                        MainForm.Instance.SaveDAT();
+                    }
+                }
+                JointManager.CleanupRendering();
                 viewport.Dispose();
                 _animEditor.CloseOnExit = true;
                 _animEditor.Dispose();
@@ -133,7 +148,7 @@ namespace HSDRawViewer.GUI.Plugins.Melee
                 {
                    // MessageBox.Show("Changes Made");
                     //if (MessageBox.Show("Save Changes to Animation?", "Save Animation", MessageBoxButtons.YesNoCancel) == DialogResult.Yes)
-                    SaveAnimation();
+                    SaveAnimationChanges();
                 }
             };
             
@@ -190,6 +205,8 @@ namespace HSDRawViewer.GUI.Plugins.Melee
             LoadAnimation(script.Symbol);
 
             ResetModelVis();
+
+            UpdateFrameTips();
         }
 
         /// <summary>
@@ -223,6 +240,10 @@ namespace HSDRawViewer.GUI.Plugins.Melee
             else
             if (_node.Text.Contains("Demo"))
                 LoadDemoAnimationFiles();
+            else
+            {
+                MessageBox.Show("Rendering Files not supported for this node", "Unsupported Rendering", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
 
@@ -264,16 +285,6 @@ namespace HSDRawViewer.GUI.Plugins.Melee
         }
 
         #endregion
-
-
-        /// <summary>
-        /// 
-        /// </summary>
-        private void SaveFile()
-        {
-            //SaveFighterAnimationFile();
-            //MessageBox.Show("This feature has not yet been implemented");
-        }
 
         /// <summary>
         /// 
@@ -968,8 +979,6 @@ namespace HSDRawViewer.GUI.Plugins.Melee
                         // process attribute
 
 
-
-
                         // process script
 
                     }
@@ -982,9 +991,9 @@ namespace HSDRawViewer.GUI.Plugins.Melee
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void savePlayerRenderingFilesToolStripMenuItem_Click(object sender, EventArgs e)
+        private void trackInfoToolStripMenuItem_CheckedChanged(object sender, EventArgs e)
         {
-            SaveFile();
+            UpdateFrameTips();
         }
 
         /// <summary>
@@ -992,80 +1001,46 @@ namespace HSDRawViewer.GUI.Plugins.Melee
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void importFigatreeToolStripMenuItem_Click(object sender, EventArgs e)
+        private void fsmMode_CheckedChanged(object sender, EventArgs e)
         {
-            if (actionList.SelectedItem is Action a)
+            toolStripDropDownButton1.Enabled = !fsmMode.Checked;
+            editFsms.Visible = fsmMode.Checked;
+            applyFSM.Visible = fsmMode.Checked;
+
+            var temp = FrameSpeedModifiers.ToList();
+            FrameSpeedModifiers.Clear();
+            UpdateAnimationWithFSMs();
+            FrameSpeedModifiers.AddRange(temp);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void editFsms_Click(object sender, EventArgs e)
+        {
+            // component box edit fsms
+            PopoutCollectionEditor.EditValue(this, this, "FrameSpeedModifiers");
+
+            UpdateAnimationWithFSMs();
+
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void applyFSM_Click(object sender, EventArgs e)
+        {
+            if (MessageBox.Show("Are you sure you want to apply fsms?\nThis operation cannot be undone.", "Apply FSMs", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Warning) == DialogResult.Yes)
             {
-                var f = FileIO.OpenFile(ApplicationSettings.HSDFileFilter);
-
-                if (f != null)
-                {
-                    // check valid dat file
-                    var file = new HSDRawFile(f);
-
-                    // grab symbol
-                    var symbol = file.Roots[0].Name;
-
-                    // check if symbol exists and ok to overwrite
-                    if(SymbolToAnimation.ContainsKey(symbol))
-                    {
-                        if(MessageBox.Show($"Symbol \"{symbol}\" already exists.\nIs it okay to overwrite?", "Overwrite Symbol", MessageBoxButtons.YesNoCancel) != DialogResult.Yes)
-                            return;
-
-                        SymbolToAnimation[symbol] = File.ReadAllBytes(f);
-                    }
-                    else
-                        SymbolToAnimation.Add(symbol, File.ReadAllBytes(f));
-                        
-                    // set action symbol
-                    a.Symbol = symbol;
-
-                    // reselect action
-                    LoadAnimation(symbol);
-                }
+                FrameSpeedModifiers.Clear();
+                UpdateFrameTips();
+                SaveAnimationChanges();
+                fsmMode.Checked = false;
             }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void exportFigatreeToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            if(actionList.SelectedItem is Action a)
-            {
-                if(a.Symbol != null && SymbolToAnimation.ContainsKey(a.Symbol))
-                {
-                    var f = FileIO.SaveFile(ApplicationSettings.HSDFileFilter, a.Symbol + ".dat");
-
-                    if (f != null)
-                        File.WriteAllBytes(f, SymbolToAnimation[a.Symbol]);
-                }
-            }
-        }
-
-        private PopoutJointAnimationEditor _animEditor = new PopoutJointAnimationEditor(false);
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void popoutEditorToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            _animEditor.Show();
-            _animEditor.Visible = true;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void saveAnimationChangesToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            SaveAnimation();
         }
     }
 }

@@ -8,6 +8,7 @@ using HSDRawViewer.Converters;
 using HSDRawViewer.Rendering.Animation;
 using HSDRawViewer.Rendering.GX;
 using HSDRawViewer.Tools;
+using System.Drawing;
 
 namespace HSDRawViewer.Rendering.Models
 {
@@ -25,6 +26,8 @@ namespace HSDRawViewer.Rendering.Models
         public bool EnableDepth { get; set; } = true;
 
         public bool RenderSplines { get; set; } = false;
+
+        public bool EnableHiddenFlag { get; set; } = false;
 
         public float MaterialFrame { get; set; }
 
@@ -76,14 +79,15 @@ namespace HSDRawViewer.Rendering.Models
         /// </summary>
         /// <param name="index"></param>
         /// <param name="transform"></param>
-        public void SetWorldTransform(int index, Matrix4 transform)
+        public void SetWorldTransform(int index, Matrix4 transform, bool update = true)
         {
             foreach (var v in jobjToCache)
                 if (v.Value.Index == index)
                 {
                     v.Value.SkipWorldUpdate = true;
                     v.Value.WorldTransform = transform;
-                    UpdateNoRender();
+                    if (update)
+                        UpdateNoRender();
                     v.Value.SkipWorldUpdate = false;
                     break;
                 }
@@ -359,6 +363,30 @@ namespace HSDRawViewer.Rendering.Models
         /// <summary>
         /// 
         /// </summary>
+        /// <returns></returns>
+        private bool BranchIsVisible(HSD_JOBJ jobj, JOBJCache cache)
+        {
+            var parent = cache;
+            var visible = !jobj.Flags.HasFlag(JOBJ_FLAG.HIDDEN);
+
+            while (parent != null)
+            {
+                if (Animation != null && 
+                    Animation.GetJointBranchState(Frame, parent.Index, out float branch))
+                    return branch != 0;
+
+                parent = parent.Parent;
+            }
+
+            if (EnableHiddenFlag)
+                return visible;
+            else
+                return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         private void RenderDOBJs(Camera camera)
         {
             if (_settings.RenderObjects)
@@ -377,10 +405,22 @@ namespace HSDRawViewer.Rendering.Models
                     MatAnimation.DOBJIndex = 0;
                     ShapeAnimation.DOBJIndex = 0;
 
+                    if (!BranchIsVisible(b.Key, b.Value))
+                    {
+                        MatAnimation.JOBJIndex++;
+                        ShapeAnimation.JOBJIndex++;
+                        continue;
+                    }
+
                     if (b.Key.Dobj != null)
                     {
                         foreach (var dobj in b.Key.Dobj.List)
                         {
+                            // skip dobjs without mobjs
+                            if (dobj.Mobj == null)
+                                continue;
+
+                            // 
                             if (dobj == DOBJManager.SelectedDOBJ)
                                 parent = b.Key;
 
@@ -399,7 +439,7 @@ namespace HSDRawViewer.Rendering.Models
 
                     // render splines if possible
                     if (RenderSplines && b.Key.Spline != null)
-                        DrawShape.RenderSpline(b.Key.Spline);
+                        DrawShape.RenderSpline(b.Key.Spline, Color.Yellow, Color.Blue);
 
                     MatAnimation.JOBJIndex++;
                     ShapeAnimation.JOBJIndex++;
@@ -423,7 +463,7 @@ namespace HSDRawViewer.Rendering.Models
                 //GL.Disable(EnableCap.DepthTest);
                 GL.DepthFunc(DepthFunction.Always);
 
-                if (DOBJManager.SelectedDOBJ != null && _settings.OutlineSelected)
+                if (DOBJManager.SelectedDOBJ != null && _settings.OutlineSelected && parent != null)
                 {
                     DOBJManager.RenderDOBJShader(GXShader._shader, DOBJManager.SelectedDOBJ, parent, this, null, true);
                 }
@@ -807,6 +847,15 @@ namespace HSDRawViewer.Rendering.Models
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void HideAllDOBJs()
+        {
+            for (int i = 0; i < DOBJManager.DOBJCount; i++)
+                HideDOBJ(i);
         }
 
 

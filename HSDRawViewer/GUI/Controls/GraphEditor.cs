@@ -844,9 +844,13 @@ namespace HSDRawViewer.GUI.Controls
         {
             if (_selectedPlayer != null)
             {
-                _selectedPlayer.Keys = HSDK.LoadKeys();
-                _graph.Invalidate();
-                OnTrackEdited(EventArgs.Empty);
+                var keys = HSDK.LoadKeys();
+                if (keys != null)
+                {
+                    _selectedPlayer.Keys = keys;
+                    _graph.Invalidate();
+                    OnTrackEdited(EventArgs.Empty);
+                }
             }
         }
 
@@ -946,7 +950,7 @@ NONE - None (do not use)";
         {
             if (_selectedPlayer != null)
             {
-                AnimationCompressor.BakeTrack(_selectedPlayer);
+                AnimationKeyCompressor.BakeTrack(_selectedPlayer);
                 _graph.Invalidate();
                 OnTrackEdited(EventArgs.Empty);
             }
@@ -983,7 +987,7 @@ NONE - None (do not use)";
                 {
                     if(d.ShowDialog() == DialogResult.OK)
                     {
-                        AnimationCompressor.CompressTrack(_selectedPlayer, _compSettings.CompressionLevel);
+                        AnimationKeyCompressor.CompressTrack(_selectedPlayer, _compSettings.CompressionLevel);
                         _graph.Invalidate();
                         OnTrackEdited(EventArgs.Empty);
                     }

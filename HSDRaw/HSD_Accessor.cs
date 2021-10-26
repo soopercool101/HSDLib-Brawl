@@ -2,6 +2,7 @@
 using System;
 using System.Linq;
 using System.ComponentModel;
+using HSDRaw.Common;
 
 namespace HSDRaw
 {
@@ -61,7 +62,8 @@ namespace HSDRaw
 
             if (TrimmedSize != -1
                 && _s.Length > TrimmedSize
-                && GetType() != typeof(Common.HSD_DOBJ)) // skip dobj for unknown reasons
+                && GetType() != typeof(Common.HSD_DOBJ)// skip dobj for unknown reasons
+                && GetType() != typeof(Melee.Pl.SBM_Article)) // skip article since other data can be stored there
             {
                 System.Diagnostics.Debug.WriteLine(GetType().Name + ": 0x" + _s.Length.ToString("X") + " => 0x" + TrimmedSize.ToString("X"));
                 trimmed += _s.Length - TrimmedSize;
@@ -542,6 +544,15 @@ namespace HSDRaw
             var arr = Array.ToList();
             arr.Add(value);
             Array = arr.ToArray();
+        }
+
+        public T[] Slice(short pointCount)
+        {
+            T[] o = new T[Math.Min(Length, pointCount)];
+            for (int i = 0; i < o.Length; i++)
+                o[i] = this[i];
+            return o;
+
         }
     }
 

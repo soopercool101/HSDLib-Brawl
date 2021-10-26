@@ -16,6 +16,10 @@ using HSDRaw.Melee;
 using HSDRaw.MEX;
 using HSDRaw.MEX.Stages;
 using HSDRaw.MEX.Menus;
+using HSDRaw.AirRide.Em;
+using HSDRaw.AirRide.Rd;
+using HSDRaw.AirRide.Kx;
+using HSDRaw.AirRide;
 
 namespace HSDRaw
 {
@@ -563,7 +567,7 @@ namespace HSDRaw
         /// <param name="bufferAlign"></param>
         public void Save(Stream stream, bool bufferAlign = true, bool optimize = true, bool trim = false)
         {
-            if (Roots.Count > 0 && Roots[0].Data is MEX_Data)
+            if (Roots.Count > 0 && (Roots[0].Data is MEX_Data || Roots[0].Data is kexData))
                 bufferAlign = false;
 
             // trim data if desired
@@ -608,7 +612,8 @@ namespace HSDRaw
                 optimize && 
                 Roots.Count > 0 && 
                 !(Roots[0].Data is SBM_FighterData) && 
-                !(Roots[0].Data is MEX_Data))
+                !(Roots[0].Data is MEX_Data) &&
+                !(Roots[0].Data is kexData))
                 RemoveDuplicateBuffers();
 
             // guarentee order
@@ -812,17 +817,36 @@ namespace HSDRaw
                 x => x.StartsWith("SIS_") ?  new SBM_SISData() : null,
                 x => x.Equals("evMenu") ?  new SBM_EventMenu() : null,
                 x => x.Equals("lbBgFlashColAnimData") ?  new HSDArrayAccessor<ftCommonColorEffect>() : null,
-                x => x.Equals("ftcmd") ?  new SBM_FighterCommandTable() : null,
+                x => x.Equals("ftcmd") ?  new SBM_FighterActionTable() : null,
                 x => x.Equals("Stc_icns") ?  new MEX_Stock() : null,
                 x => x.Equals("mexMenu") ?  new MEX_Menu() : null,
                 x => x.Equals("bgm") ?  new MEX_BGMModel() : null,
                 x => x.Equals("mexCostume") ?  new MEX_CostumeSymbol() : null,
                 x => x.StartsWith("mnName") ?  new HSDFixedLengthPointerArrayAccessor<HSD_ShiftJIS_String>() : null,
                 x => x.EndsWith("move_logic") ?  new HSDArrayAccessor<MEX_MoveLogic>() : null,
+                x => x.StartsWith("em") && x.EndsWith("DataGroup") ?  new KAR_emData() : null,
+                x => x.Equals("stData") ?  new KAR_stData() : null,
+                x => x.StartsWith("rdMotion") ?  new HSDArrayAccessor<KAR_RdMotion>() : null,
+                x => x.StartsWith("vcDataCommon") ?  new KAR_vcDataCommon() : null,
+                x => x.StartsWith("rdDataCommon") ?  new HSDAccessor() : null, // TODO:
+                x => x.StartsWith("rdData") ?  new KAR_RdData() : null,
+                x => x.StartsWith("rdExt") ?  new KEX_RdExt() : null,
+                x => x.StartsWith("kexData") ?  new kexData() : null,
                 x => new HSDAccessor(),
         };
 
         private readonly static Func<string, HSDAccessor> @symbol_switch = symbol_identificators.Aggregate((x, y) => z => x(z) ?? y(z));
+
+        private static List<Func<string, HSDAccessor>> _additionRules = new List<Func<string, HSDAccessor>>();
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="rule"></param>
+        public static void AddSymbolRule(Func<string, HSDAccessor> rule)
+        {
+            _additionRules.Add(rule);
+        }
 
         /// <summary>
         /// Attempts to guess the structure type based on the root name
@@ -832,6 +856,16 @@ namespace HSDRaw
         /// <returns></returns>
         private HSDAccessor GuessAccessor(string rootString, HSDStruct str)
         {
+            foreach (var r in _additionRules)
+            {
+                var ar = r(rootString);
+                if (ar != null)
+                {
+                    ar._s = str;
+                    return ar;
+                }
+            }
+
             HSDAccessor acc = @symbol_switch(rootString);
             acc._s = str;
             return acc;

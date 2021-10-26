@@ -7,6 +7,27 @@ namespace HSDRaw.Tools
     /// <summary>
     /// 
     /// </summary>
+    public class FrameSpeedMultiplier
+    {
+        public int Frame { get; set; }
+
+        public float Rate
+        {
+            get => _rate; set
+            {
+                _rate = value; 
+
+                if (_rate <= 0)
+                    _rate = 1;
+            }
+        }
+
+        private float _rate;
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
     public class FOBJAnimState
     {
         public float p0 = 0;
@@ -272,7 +293,7 @@ namespace HSDRaw.Tools
         /// 
         /// </summary>
         /// <returns></returns>
-        public HSD_FOBJ ToFobj()
+        public HSD_FOBJ ToFobj(float error = 0.0001f)
         {
             HSD_FOBJ fobj = new HSD_FOBJ();
 
@@ -284,7 +305,7 @@ namespace HSDRaw.Tools
             }
             else
             if (Keys.Count > 0)
-                fobj.SetKeys(Keys, JointTrackType);
+                fobj.SetKeys(Keys, JointTrackType, error);
 
             return fobj;
         }
@@ -293,7 +314,7 @@ namespace HSDRaw.Tools
         /// 
         /// </summary>
         /// <returns></returns>
-        public HSD_FOBJDesc ToFobjDesc()
+        public HSD_FOBJDesc ToFobjDesc(float error = 0.0001f)
         {
             HSD_FOBJDesc fobj = new HSD_FOBJDesc();
 
@@ -306,9 +327,51 @@ namespace HSDRaw.Tools
             }
             else
             if (Keys.Count > 0)
-                fobj.SetKeys(Keys, TrackType);
+                fobj.SetKeys(Keys, TrackType, error);
 
             return fobj;
+        }
+
+        /// <summary>
+        /// Applies frame speed multiplier's to animation
+        /// </summary>
+        public void ApplyFSMs(IEnumerable<FrameSpeedMultiplier> frameSpeedMultiplers)
+        {
+            //
+            var newKeys = new List<FOBJKey>();
+
+            // process animation with fsm
+            float frameRate = 1;
+            int frame = 0;
+            float maxFrame = 0;
+            for (float f = 0; f <= FrameCount;)
+            {
+                // check fsm
+                foreach (var v in frameSpeedMultiplers)
+                    if (f >= v.Frame && v.Frame >= maxFrame)
+                    {
+                        frameRate = v.Rate;
+                        maxFrame = v.Frame;
+                    }
+
+                // add new key
+                newKeys.Add(new FOBJKey()
+                {
+                    Frame = frame,
+                    Value = GetValue(f),
+                    InterpolationType = GXInterpolationType.HSD_A_OP_LIN
+                });
+
+                // advance animation
+                frame += 1;
+                f += frameRate;
+            }
+
+            // 
+            Keys = newKeys;
+
+            // compress track
+            AnimationKeyCompressor.CompressTrack(this);
         }
     }
     

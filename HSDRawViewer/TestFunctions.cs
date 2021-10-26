@@ -11,6 +11,7 @@ using System.Text.RegularExpressions;
 using HSDRaw.Melee.Pl;
 using HSDRaw.Tools.Melee;
 using System.Linq;
+using HSDRawViewer.Tools;
 
 namespace HSDRawViewer
 {
@@ -105,7 +106,7 @@ namespace HSDRawViewer
                 foreach(var track in tracks.Tracks)
                 {
                     HSD_Track newtrack = new HSD_Track();
-                    newtrack.FOBJ = FOBJFrameEncoder.EncodeFrames(track.GetKeys(), track.FOBJ.JointTrackType);
+                    newtrack.FromFOBJ(FOBJFrameEncoder.EncodeFrames(track.GetKeys(), track.JointTrackType));
                     newt.Add(newtrack);
                 }
                 newtracks.Add(new FigaTreeNode() { Tracks = newt });
@@ -183,7 +184,7 @@ namespace HSDRawViewer
 
                                 ActionDecompiler d = new ActionDecompiler();
 
-                                var sa = pl.FighterCommandTable.Commands;
+                                var sa = pl.FighterActionTable.Commands;
 
                                 int index = 0;
                                 foreach (var v in sa)
@@ -194,6 +195,129 @@ namespace HSDRawViewer
                         }
                     }
                 }
+        }
+
+        public class RemapSettings
+        {
+            public bool IgnoreTranslation { get; set; } = true;
+        }
+
+        public static HSD_FigaTree RemapFigatree(RemapSettings settings, HSD_FigaTree from, int newBoneCount, JointMap mapFrom, JointMap mapTo)
+        {
+            var sourceNodes = from.Nodes;
+            var targetNodes = new List<FigaTreeNode>();
+            
+
+            for (int i = 0; i < newBoneCount; i++)
+            {
+                FigaTreeNode node = new FigaTreeNode();
+                targetNodes.Add(node);
+
+                var remapIndex = mapFrom.IndexOf(mapTo[i]);
+                if (remapIndex != -1)
+                {
+                    // port tracks
+                    node.Tracks.AddRange(sourceNodes[remapIndex].Tracks);
+
+                    if (settings.IgnoreTranslation)
+                    {
+                        node.Tracks.RemoveAll(
+                            e => 
+                            e.JointTrackType == JointTrackType.HSD_A_J_TRAX ||
+                            e.JointTrackType == JointTrackType.HSD_A_J_TRAY || 
+                            e.JointTrackType == JointTrackType.HSD_A_J_TRAZ);
+                    }
+                }
+            }
+
+
+            var newft = new HSD_FigaTree();
+            newft.Type = 1;
+            newft.FrameCount = from.FrameCount;
+            newft.Nodes = targetNodes;
+            return newft;
+        }
+
+
+        public delegate void EditSubaction(SBM_FighterAction action);
+        public delegate void EditAnimation(HSD_FigaTree ft);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ftdat"></param>
+        /// <param name="ajdat"></param>
+        /// <param name="editAnim"></param>
+        public static void EditFighterAnimations(string ftdat, string ajdat, EditAnimation editAnim)
+        {
+            FighterAJManager manager = new FighterAJManager(File.ReadAllBytes(ajdat));
+
+            foreach (var symbol in manager.GetAnimationSymbols())
+            {
+                var ftFile = new HSDRawFile(manager.GetAnimationData(symbol));
+
+                if (ftFile[symbol] != null)
+                {
+                    var ft = ftFile[symbol].Data as HSD_FigaTree;
+                    editAnim(ft);
+                    ftFile[symbol].Data = ft;
+
+                    using (MemoryStream stream = new MemoryStream())
+                    {
+                        ftFile.Save(stream);
+                        manager.SetAnimation(symbol, stream.ToArray());
+                    }
+                }
+            }
+
+            var newAJFile = manager.RebuildAJFile(manager.GetAnimationSymbols().ToArray(), true);
+
+            HSDRawFile ftfile = new HSDRawFile(ftdat);
+            if (ftfile.Roots[0].Data is SBM_FighterData data)
+            {
+                var sa = data.FighterActionTable.Commands;
+
+                foreach (var action in sa)
+                {
+                    if (action.SymbolName != null && !string.IsNullOrEmpty(action.SymbolName.Value))
+                    {
+                        var sizeOffset = manager.GetOffsetSize(action.SymbolName.Value);
+                        action.AnimationOffset = sizeOffset.Item1;
+                        action.AnimationSize = sizeOffset.Item2;
+                    }
+                }
+
+                data.FighterActionTable.Commands = sa;
+
+                ftfile.TrimData();
+                ftfile.Save(ftdat);
+                File.WriteAllBytes(ajdat, newAJFile);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ftdat"></param>
+        /// <param name="ajdat"></param>
+        /// <param name="editAnim"></param>
+        public static void EditFighterActions(string ftdat, EditSubaction editAction)
+        {
+            HSDRawFile ftfile = new HSDRawFile(ftdat);
+            if (ftfile.Roots[0].Data is SBM_FighterData data)
+            {
+                var sa = data.FighterActionTable.Commands;
+
+                foreach (var action in sa)
+                {
+                    editAction(action);
+                }
+
+                data.FighterActionTable.Commands = sa;
+
+                ftfile.TrimData();
+                ftfile.Save(ftdat);
+            }
         }
     }
 }

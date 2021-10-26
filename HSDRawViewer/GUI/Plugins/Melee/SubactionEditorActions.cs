@@ -6,6 +6,7 @@ using HSDRawViewer.Tools;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Drawing;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -106,11 +107,27 @@ namespace HSDRawViewer.GUI.Plugins.Melee
             {
                 get
                 {
+                    return SubactionDesc.Name;
+                }
+            }
+
+            public int CodeID
+            {
+                get
+                {
                     Bitreader r = new Bitreader(data);
 
-                    var sa = SubactionManager.GetSubaction((byte)r.Read(8), SubactionGroup);
+                    return (byte)r.Read(6);
+                }
+            }
 
-                    return sa.Name;
+            public Subaction SubactionDesc
+            {
+                get
+                {
+                    Bitreader r = new Bitreader(data);
+
+                    return SubactionManager.GetSubaction((byte)r.Read(8), SubactionGroup);
                 }
             }
 
@@ -220,7 +237,7 @@ namespace HSDRawViewer.GUI.Plugins.Melee
         /// 
         /// </summary>
         /// <param name="Subactions"></param>
-        private void LoadActions(SBM_FighterCommand[] Subactions)
+        private void LoadActions(SBM_FighterAction[] Subactions)
         {
             HashSet<HSDStruct> aHash = new HashSet<HSDStruct>();
             Queue<HSDStruct> extra = new Queue<HSDStruct>();
@@ -360,7 +377,7 @@ namespace HSDRawViewer.GUI.Plugins.Melee
 
             if (!a.Subroutine)
             {
-                var ftcmd = new SBM_FighterCommand();
+                var ftcmd = new SBM_FighterAction();
                 ftcmd._s = _node.Accessor._s.GetEmbeddedStruct(0x18 * index, ftcmd.TrimmedSize);
 
                 ftcmd.Name = a.Symbol;
@@ -398,6 +415,8 @@ namespace HSDRawViewer.GUI.Plugins.Melee
 
                 SubactionProcess.SetStruct(a._struct, SubactionGroup);
             }
+
+            UpdateFrameTips();
         }
     }
 }

@@ -47,7 +47,7 @@
             this.toolStripComboBox1 = new System.Windows.Forms.ToolStripComboBox();
             this.label1 = new System.Windows.Forms.Label();
             this.previewBox = new System.Windows.Forms.GroupBox();
-            this.toolStrip3 = new System.Windows.Forms.ToolStrip();
+            this.liveToolStrip = new System.Windows.Forms.ToolStrip();
             this.displayDropDown = new System.Windows.Forms.ToolStripDropDownButton();
             this.modelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.bonesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -61,12 +61,16 @@
             this.groundECH = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
             this.throwModelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.trackInfoToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripDropDownButton1 = new System.Windows.Forms.ToolStripDropDownButton();
             this.importFigatreeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportFigatreeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.figatreeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator7 = new System.Windows.Forms.ToolStripSeparator();
             this.popoutEditorToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.saveAnimationChangesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.fsmMode = new System.Windows.Forms.ToolStripButton();
+            this.editFsms = new System.Windows.Forms.ToolStripButton();
+            this.applyFSM = new System.Windows.Forms.ToolStripButton();
             this.renderPanel = new System.Windows.Forms.Panel();
             this.buttonGoto = new System.Windows.Forms.Button();
             this.referenceLabel = new System.Windows.Forms.Label();
@@ -90,7 +94,7 @@
             this.groupBox1.SuspendLayout();
             this.toolStrip2.SuspendLayout();
             this.previewBox.SuspendLayout();
-            this.toolStrip3.SuspendLayout();
+            this.liveToolStrip.SuspendLayout();
             this.renderPanel.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.toolStrip1.SuspendLayout();
@@ -299,7 +303,7 @@
             // 
             // previewBox
             // 
-            this.previewBox.Controls.Add(this.toolStrip3);
+            this.previewBox.Controls.Add(this.liveToolStrip);
             this.previewBox.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.previewBox.Location = new System.Drawing.Point(4, 159);
             this.previewBox.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
@@ -311,17 +315,20 @@
             this.previewBox.Text = "Live Editor";
             this.previewBox.Visible = false;
             // 
-            // toolStrip3
+            // liveToolStrip
             // 
-            this.toolStrip3.ImageScalingSize = new System.Drawing.Size(20, 20);
-            this.toolStrip3.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.liveToolStrip.ImageScalingSize = new System.Drawing.Size(20, 20);
+            this.liveToolStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.displayDropDown,
-            this.toolStripDropDownButton1});
-            this.toolStrip3.Location = new System.Drawing.Point(4, 19);
-            this.toolStrip3.Name = "toolStrip3";
-            this.toolStrip3.Size = new System.Drawing.Size(712, 27);
-            this.toolStrip3.TabIndex = 0;
-            this.toolStrip3.Text = "toolStrip3";
+            this.toolStripDropDownButton1,
+            this.fsmMode,
+            this.editFsms,
+            this.applyFSM});
+            this.liveToolStrip.Location = new System.Drawing.Point(4, 19);
+            this.liveToolStrip.Name = "liveToolStrip";
+            this.liveToolStrip.Size = new System.Drawing.Size(712, 27);
+            this.liveToolStrip.TabIndex = 0;
+            this.liveToolStrip.Text = "toolStrip3";
             // 
             // displayDropDown
             // 
@@ -338,7 +345,8 @@
             this.eCBToolStripMenuItem,
             this.groundECH,
             this.toolStripSeparator4,
-            this.throwModelToolStripMenuItem});
+            this.throwModelToolStripMenuItem,
+            this.trackInfoToolStripMenuItem});
             this.displayDropDown.Image = ((System.Drawing.Image)(resources.GetObject("displayDropDown.Image")));
             this.displayDropDown.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.displayDropDown.Name = "displayDropDown";
@@ -429,6 +437,16 @@
             this.throwModelToolStripMenuItem.Size = new System.Drawing.Size(227, 26);
             this.throwModelToolStripMenuItem.Text = "Throw Model";
             // 
+            // trackInfoToolStripMenuItem
+            // 
+            this.trackInfoToolStripMenuItem.Checked = true;
+            this.trackInfoToolStripMenuItem.CheckOnClick = true;
+            this.trackInfoToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.trackInfoToolStripMenuItem.Name = "trackInfoToolStripMenuItem";
+            this.trackInfoToolStripMenuItem.Size = new System.Drawing.Size(227, 26);
+            this.trackInfoToolStripMenuItem.Text = "Track Info";
+            this.trackInfoToolStripMenuItem.CheckedChanged += new System.EventHandler(this.trackInfoToolStripMenuItem_CheckedChanged);
+            // 
             // toolStripDropDownButton1
             // 
             this.toolStripDropDownButton1.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
@@ -436,8 +454,7 @@
             this.importFigatreeToolStripMenuItem,
             this.exportFigatreeToolStripMenuItem,
             this.toolStripSeparator7,
-            this.popoutEditorToolStripMenuItem,
-            this.saveAnimationChangesToolStripMenuItem});
+            this.popoutEditorToolStripMenuItem});
             this.toolStripDropDownButton1.Image = ((System.Drawing.Image)(resources.GetObject("toolStripDropDownButton1.Image")));
             this.toolStripDropDownButton1.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripDropDownButton1.Name = "toolStripDropDownButton1";
@@ -447,35 +464,69 @@
             // importFigatreeToolStripMenuItem
             // 
             this.importFigatreeToolStripMenuItem.Name = "importFigatreeToolStripMenuItem";
-            this.importFigatreeToolStripMenuItem.Size = new System.Drawing.Size(256, 26);
-            this.importFigatreeToolStripMenuItem.Text = "Import Figatree";
+            this.importFigatreeToolStripMenuItem.Size = new System.Drawing.Size(228, 26);
+            this.importFigatreeToolStripMenuItem.Text = "Import Animation";
             this.importFigatreeToolStripMenuItem.Click += new System.EventHandler(this.importFigatreeToolStripMenuItem_Click);
             // 
             // exportFigatreeToolStripMenuItem
             // 
+            this.exportFigatreeToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.figatreeToolStripMenuItem});
             this.exportFigatreeToolStripMenuItem.Name = "exportFigatreeToolStripMenuItem";
-            this.exportFigatreeToolStripMenuItem.Size = new System.Drawing.Size(256, 26);
-            this.exportFigatreeToolStripMenuItem.Text = "Export Figatree";
-            this.exportFigatreeToolStripMenuItem.Click += new System.EventHandler(this.exportFigatreeToolStripMenuItem_Click);
+            this.exportFigatreeToolStripMenuItem.Size = new System.Drawing.Size(228, 26);
+            this.exportFigatreeToolStripMenuItem.Text = "Export Animation As";
+            // 
+            // figatreeToolStripMenuItem
+            // 
+            this.figatreeToolStripMenuItem.Name = "figatreeToolStripMenuItem";
+            this.figatreeToolStripMenuItem.Size = new System.Drawing.Size(146, 26);
+            this.figatreeToolStripMenuItem.Text = "Figatree";
+            this.figatreeToolStripMenuItem.Click += new System.EventHandler(this.figatreeToolStripMenuItem_Click);
             // 
             // toolStripSeparator7
             // 
             this.toolStripSeparator7.Name = "toolStripSeparator7";
-            this.toolStripSeparator7.Size = new System.Drawing.Size(253, 6);
+            this.toolStripSeparator7.Size = new System.Drawing.Size(225, 6);
             // 
             // popoutEditorToolStripMenuItem
             // 
             this.popoutEditorToolStripMenuItem.Name = "popoutEditorToolStripMenuItem";
-            this.popoutEditorToolStripMenuItem.Size = new System.Drawing.Size(256, 26);
+            this.popoutEditorToolStripMenuItem.Size = new System.Drawing.Size(228, 26);
             this.popoutEditorToolStripMenuItem.Text = "Edit Animation";
             this.popoutEditorToolStripMenuItem.Click += new System.EventHandler(this.popoutEditorToolStripMenuItem_Click);
             // 
-            // saveAnimationChangesToolStripMenuItem
+            // fsmMode
             // 
-            this.saveAnimationChangesToolStripMenuItem.Name = "saveAnimationChangesToolStripMenuItem";
-            this.saveAnimationChangesToolStripMenuItem.Size = new System.Drawing.Size(256, 26);
-            this.saveAnimationChangesToolStripMenuItem.Text = "Save Animation Changes";
-            this.saveAnimationChangesToolStripMenuItem.Click += new System.EventHandler(this.saveAnimationChangesToolStripMenuItem_Click);
+            this.fsmMode.CheckOnClick = true;
+            this.fsmMode.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.fsmMode.Image = ((System.Drawing.Image)(resources.GetObject("fsmMode.Image")));
+            this.fsmMode.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.fsmMode.Name = "fsmMode";
+            this.fsmMode.Size = new System.Drawing.Size(84, 24);
+            this.fsmMode.Text = "FSM Mode";
+            this.fsmMode.CheckedChanged += new System.EventHandler(this.fsmMode_CheckedChanged);
+            // 
+            // editFsms
+            // 
+            this.editFsms.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.editFsms.Image = ((System.Drawing.Image)(resources.GetObject("editFsms.Image")));
+            this.editFsms.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.editFsms.Name = "editFsms";
+            this.editFsms.Size = new System.Drawing.Size(77, 24);
+            this.editFsms.Text = "Edit FSMs";
+            this.editFsms.Visible = false;
+            this.editFsms.Click += new System.EventHandler(this.editFsms_Click);
+            // 
+            // applyFSM
+            // 
+            this.applyFSM.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.applyFSM.Image = ((System.Drawing.Image)(resources.GetObject("applyFSM.Image")));
+            this.applyFSM.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.applyFSM.Name = "applyFSM";
+            this.applyFSM.Size = new System.Drawing.Size(144, 24);
+            this.applyFSM.Text = "Apply FSM Changes";
+            this.applyFSM.Visible = false;
+            this.applyFSM.Click += new System.EventHandler(this.applyFSM_Click);
             // 
             // renderPanel
             // 
@@ -687,8 +738,8 @@
             this.toolStrip2.PerformLayout();
             this.previewBox.ResumeLayout(false);
             this.previewBox.PerformLayout();
-            this.toolStrip3.ResumeLayout(false);
-            this.toolStrip3.PerformLayout();
+            this.liveToolStrip.ResumeLayout(false);
+            this.liveToolStrip.PerformLayout();
             this.renderPanel.ResumeLayout(false);
             this.renderPanel.PerformLayout();
             this.groupBox2.ResumeLayout(false);
@@ -732,7 +783,7 @@
         private System.Windows.Forms.Splitter splitter3;
         private System.Windows.Forms.ToolStripLabel toolStripLabel1;
         private System.Windows.Forms.ToolStripComboBox toolStripComboBox1;
-        private System.Windows.Forms.ToolStrip toolStrip3;
+        private System.Windows.Forms.ToolStrip liveToolStrip;
         private System.Windows.Forms.ToolStripDropDownButton displayDropDown;
         private System.Windows.Forms.ToolStripMenuItem bonesToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
@@ -756,7 +807,11 @@
         private System.Windows.Forms.ToolStripMenuItem exportFigatreeToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem popoutEditorToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem createNewSubroutineToolStripMenuItem1;
-        private System.Windows.Forms.ToolStripMenuItem saveAnimationChangesToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator7;
+        private System.Windows.Forms.ToolStripMenuItem figatreeToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem trackInfoToolStripMenuItem;
+        private System.Windows.Forms.ToolStripButton fsmMode;
+        private System.Windows.Forms.ToolStripButton editFsms;
+        private System.Windows.Forms.ToolStripButton applyFSM;
     }
 }

@@ -120,7 +120,7 @@
     <Compile Include="ContextMenus\JOBJDescContextMenu.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="ContextMenus\MapHeadContextMenu.cs">
+    <Compile Include="ContextMenus\Melee\MapHeadContextMenu.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="ContextMenus\MatAnimContextMenu.cs">
@@ -147,19 +147,23 @@
     <Compile Include="ContextMenus\Melee\SelectCharContextMenu.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="ContextMenus\SubactionTableContextMenu.cs">
+    <Compile Include="ContextMenus\SplineContextMenu.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="ContextMenus\SubactionTableContextMenu.cs" />
     <Compile Include="ContextMenus\UnidentifiedContextMenu.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Converters\AirRide\BucketGen.cs" />
+    <Compile Include="Converters\AirRide\KCLConv.cs" />
     <Compile Include="Converters\Animation\CHR0Converter.cs" />
     <Compile Include="Converters\Animation\ConvFOBJ.cs" />
     <Compile Include="Converters\Animation\HSDK.cs" />
+    <Compile Include="Converters\Animation\JointAnimationLoader.cs" />
     <Compile Include="Converters\SBM\ConvSVG.cs" />
-    <Compile Include="Converters\JOBJExtensions.cs" />
     <Compile Include="Converters\ConvCOLL.cs" />
     <Compile Include="Converters\ConvStgPos.cs" />
+    <Compile Include="Extensions\JOBJExtensions.cs" />
     <Compile Include="Converters\Animation\MayaAnim.cs" />
     <Compile Include="Converters\ModelExporter.cs" />
     <Compile Include="Converters\ModelImporter.cs" />
@@ -172,6 +176,7 @@
     <Compile Include="Converters\SBM\SSFConverter.cs" />
     <Compile Include="Converters\TOBJConverter.cs" />
     <Compile Include="DataNode.cs" />
+    <Compile Include="Extensions\KarCollisionExtensions.cs" />
     <Compile Include="GUI\Controls\DoubleBufferedListBox.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -185,11 +190,28 @@
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="GUI\Controls\MEXStockIconControl.Designer.cs" />
+    <Compile Include="GUI\Controls\AnimationPlaybackControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="GUI\Controls\AnimationPlaybackControl.Designer.cs">
+      <DependentUpon>AnimationPlaybackControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="GUI\Controls\PlaybackBar.cs" />
+    <Compile Include="GUI\Controls\PlaybackBar.Designer.cs">
+      <DependentUpon>PlaybackBar.cs</DependentUpon>
+    </Compile>
+    <Compile Include="GUI\Controls\PopoutCollectionEditor.cs" />
     <Compile Include="GUI\Controls\TexturePanel.cs">
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="GUI\Controls\TexturePanel.Designer.cs">
       <DependentUpon>TexturePanel.cs</DependentUpon>
+    </Compile>
+    <Compile Include="GUI\Extra\FSMTool.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="GUI\Extra\FSMTool.Designer.cs">
+      <DependentUpon>FSMTool.cs</DependentUpon>
     </Compile>
     <Compile Include="GUI\Extra\ISOFileTool.cs">
       <SubType>Form</SubType>
@@ -203,6 +225,7 @@
     <Compile Include="GUI\Extra\PopoutJointAnimationEditor.Designer.cs">
       <DependentUpon>PopoutJointAnimationEditor.cs</DependentUpon>
     </Compile>
+    <Compile Include="GUI\Plugins\AirRide\AirRideGrDataPosition.cs" />
     <Compile Include="GUI\Plugins\Melee\SubactionEditorActions.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -338,7 +361,6 @@
     <Compile Include="GUI\Controls\KeyEditor.Designer.cs">
       <DependentUpon>KeyEditor.cs</DependentUpon>
     </Compile>
-    <Compile Include="GUI\Plugins\AirRide\AirRideGrCollisionManager.cs" />
     <Compile Include="GUI\Plugins\AirRide\AirRideGrDataEditor.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -442,6 +464,7 @@
     <Compile Include="PluginManager.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RawCommand.cs" />
     <Compile Include="Rendering\Animation\AnimManager.cs" />
     <Compile Include="Rendering\Animation\AnimNode.cs" />
     <Compile Include="Rendering\Animation\MotAnimManager.cs" />
@@ -456,6 +479,7 @@
     <Compile Include="Rendering\Models\MobjManager.cs" />
     <Compile Include="Rendering\Models\VertexBufferManager.cs" />
     <Compile Include="Rendering\GX\RenderMode.cs" />
+    <Compile Include="Rendering\Renderers\AfterImageRenderer.cs" />
     <Compile Include="Rendering\Renderers\GraphRenderer.cs" />
     <Compile Include="Rendering\Renderers\HurtboxRenderer.cs" />
     <Compile Include="Rendering\Renderers\TextRenderer.cs" />
@@ -475,13 +499,13 @@
     <Compile Include="Rendering\Viewport.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Rendering\Widgets\TranslationWidget.cs" />
     <Compile Include="Sound\HPS.cs" />
     <Compile Include="Sound\SEM.cs" />
     <Compile Include="Sound\SEMEntry.cs" />
     <Compile Include="TestFunctions.cs" />
     <Compile Include="Sound\DSP.cs" />
     <Compile Include="Sound\DSPPlayer.cs" />
-    <Compile Include="Tools\AnimationCompressor.cs" />
     <Compile Include="Tools\AnimationRetarget.cs" />
     <Compile Include="Tools\FileIO.cs" />
     <Compile Include="Tools\FlagEnumEditor.cs">
@@ -497,8 +521,21 @@
     </Compile>
     <Compile Include="Sound\SSM.cs" />
     <Compile Include="Tools\ParticleManager.cs" />
+    <Compile Include="Tools\RawTimer.cs" />
     <Compile Include="Tools\Simpoly.cs" />
     <Compile Include="Tools\SubactionManager.cs" />
+    <None Include="Melee\command_rider.yml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Resources\pb_no_loop.png" />
+    <None Include="Resources\pb_play_reverse.png" />
+    <None Include="Resources\pb_start.png" />
+    <None Include="Resources\pb_rewind.png" />
+    <None Include="Resources\pb_pause.png" />
+    <None Include="Resources\pb_loop.png" />
+    <None Include="Resources\pb_fastforward.png" />
+    <None Include="Resources\pb_end.png" />
+    <None Include="Resources\pb_play.png" />
     <None Include="Resources\iso_disc.png" />
     <None Include="Resources\ts_x.png" />
     <None Include="Resources\ts_check.png" />
@@ -552,8 +589,17 @@
       <DependentUpon>ISOEditor.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="GUI\Controls\MEXStockIconControl.resx" />
+    <EmbeddedResource Include="GUI\Controls\AnimationPlaybackControl.resx">
+      <DependentUpon>AnimationPlaybackControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="GUI\Controls\PlaybackBar.resx">
+      <DependentUpon>PlaybackBar.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="GUI\Controls\TexturePanel.resx">
       <DependentUpon>TexturePanel.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="GUI\Extra\FSMTool.resx">
+      <DependentUpon>FSMTool.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="GUI\Extra\ISOFileTool.resx">
       <DependentUpon>ISOFileTool.cs</DependentUpon>
@@ -696,6 +742,19 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Shader\gx.vert">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Shader\gx_alpha_test.frag">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Shader\gx_lightmap.frag">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Shader\gx_material.frag">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Shader\gx_tev_old.frag" />
+    <None Include="Shader\gx_uv.frag">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

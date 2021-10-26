@@ -1,6 +1,7 @@
 ﻿using HSDRaw.Common;
 using HSDRaw.Common.Animation;
 using HSDRaw.Tools;
+using HSDRawViewer.Tools;
 using OpenTK;
 using System;
 using System.Collections.Generic;
@@ -28,6 +29,10 @@ namespace HSDRawViewer.Rendering
         private int index = 0;
 
         public List<IJointFrameModifier> FrameModifier = new List<IJointFrameModifier>();
+
+        public bool EnableBoneLookup = false;
+
+        public Dictionary<int, int> BoneLookup = new Dictionary<int, int>();
 
         /// <summary>
         /// 
@@ -65,6 +70,32 @@ namespace HSDRawViewer.Rendering
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="jointIndex"></param>
+        /// <returns></returns>
+        public bool GetJointBranchState(float frame, int boneIndex, out float value)
+        {
+            // set keys to animated values
+            if (boneIndex < Nodes.Count)
+            {
+                AnimNode node = Nodes[boneIndex];
+                foreach (FOBJ_Player t in node.Tracks)
+                {
+                    switch (t.JointTrackType)
+                    {
+                        case JointTrackType.HSD_A_J_BRANCH:
+                            value = t.GetValue(frame);
+                            return true;
+                    }
+                }
+            }
+
+            value = 0;
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="frame"></param>
         /// <param name="boneIndex"></param>
         /// <param name="jobj"></param>
@@ -97,6 +128,16 @@ namespace HSDRawViewer.Rendering
             SY = jobj.SY;
             SZ = jobj.SZ;
 
+            // use bone lookup if enabled
+            if (EnableBoneLookup)
+            {
+                if (BoneLookup.ContainsKey(boneIndex))
+                    boneIndex = BoneLookup[boneIndex];
+                else
+                    return;
+            }
+
+            // set keys to animated values
             if (boneIndex < Nodes.Count)
             {
                 AnimNode node = Nodes[boneIndex];
@@ -117,6 +158,7 @@ namespace HSDRawViewer.Rendering
                 }
             }
 
+            // apply frame modifiers
             foreach (var fm in FrameModifier)
                 fm.OverrideAnim(frame, boneIndex, jobj, ref TX, ref TY, ref TZ, ref RX, ref RY, ref RZ, ref SX, ref SY, ref SZ);
         }
@@ -140,7 +182,7 @@ namespace HSDRawViewer.Rendering
                 AnimNode n = new AnimNode();
                 foreach (HSD_Track t in tracks.Tracks)
                 {
-                    n.Tracks.Add(new FOBJ_Player(t.FOBJ));
+                    n.Tracks.Add(new FOBJ_Player(t.TrackType, t.GetKeys()));
                 }
                 Nodes.Add(n);
             }
@@ -152,7 +194,7 @@ namespace HSDRawViewer.Rendering
         /// <param name="nodes"></param>
         /// <param name="frameCount"></param>
         /// <returns></returns>
-        public HSD_FigaTree ToFigaTree()
+        public HSD_FigaTree ToFigaTree(float error = 0.0001f)
         {
             HSD_FigaTree tree = new HSD_FigaTree();
             tree.FrameCount = FrameCount;
@@ -164,8 +206,8 @@ namespace HSDRawViewer.Rendering
                 foreach (var t in e.Tracks)
                 {
                     HSD_Track track = new HSD_Track();
-                    HSD_FOBJ fobj = t.ToFobj();
-                    track.FOBJ = fobj;
+                    HSD_FOBJ fobj = t.ToFobj(error);
+                    track.FromFOBJ(fobj);
                     fn.Tracks.Add(track);
                 }
 
@@ -277,6 +319,43 @@ namespace HSDRawViewer.Rendering
         #region Tools
 
         /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="fsms"></param>
+        public void ApplyFSMs(IEnumerable<FrameSpeedMultiplier> fsms)
+        {
+            foreach (var n in Nodes)
+                foreach (var t in n.Tracks)
+                    t.ApplyFSMs(fsms);
+
+            // calculate new frame count
+            float frameRate = 1;
+            float lastFrame = 0;
+            float frameCount = 0;
+            foreach (var fsm in fsms)
+            {
+                var dis = fsm.Frame - lastFrame;
+                frameCount += dis / frameRate;
+
+                frameRate = fsm.Rate;
+                lastFrame = fsm.Frame;
+            }
+            var finaldistance = FrameCount - lastFrame;
+            frameCount += finaldistance / frameRate;
+
+            FrameCount = frameCount;
+
+            // recalculate frame count
+            //FrameCount = 0;
+            //foreach (var n in Nodes)
+            //    foreach (var t in n.Tracks)
+            //    {
+            //        var maxFrame = t.Keys.Max(e => e.Frame);
+            //        FrameCount = Math.Max(FrameCount, maxFrame);
+            //    }
+        }
+
+        /// <summary>
         /// Scales animation frames to be new size
         /// </summary>
         /// <param name="newFrameCount"></param>
@@ -303,19 +382,20 @@ namespace HSDRawViewer.Rendering
             {
                 foreach (var t in n.Tracks)
                 {
+                    int keyIndex = 0;
                     foreach (var k in t.Keys)
                     {
                         // scale frames in range
                         if (k.Frame >= startFrame && k.Frame <= endFrame)
                         {
                             k.Frame = (float)Math.Round(k.Frame * value);
-                            //TODO: How do you scale tangent?
-                            k.Tan *= value;// Math.Sign(k.Tan) * (float)Math.Log(Math.Abs(k.Tan), value);
+                            k.Tan = (float)(Math.Atan2(Math.Tan(k.Tan), value) * Math.PI / 180);
                         }
                         else
                         // adjust range
                         if (k.Frame > endFrame)
                             k.Frame -= adjust;
+                        keyIndex++;
                     }
 
                     // remove keys that share frames

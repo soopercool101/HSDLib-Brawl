@@ -12,6 +12,7 @@ using System.ComponentModel;
 using GCILib;
 using HSDRawViewer.GUI.Plugins.Melee;
 using HSDRaw.Common;
+using HSDRaw.Melee.Pl;
 
 namespace HSDRawViewer
 {
@@ -33,8 +34,6 @@ namespace HSDRawViewer
         public static DataNode SelectedDataNode { get; internal set; } = null;
 
         public static bool RefreshNode = false;
-
-        private List<EditorBase> Editors = new List<EditorBase>();
 
         private IDockContent LastActiveContent = null;
 
@@ -214,6 +213,22 @@ namespace HSDRawViewer
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="root"></param>
+        public static void AddRoot(string name, HSDAccessor accesor)
+        {
+            var root = new HSDRootNode()
+            {
+                Name = name,
+                Data = accesor
+            };
+
+            Instance.RawHSDFile.Roots.Add(root);
+            Instance.treeView1.Nodes.Add(new DataNode(name, accesor, root: root));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="filePath"></param>
         public void OpenFile(string filePath)
         {
@@ -297,7 +312,16 @@ namespace HSDRawViewer
         /// </summary>
         public void SaveDAT()
         {
-            if(RawHSDFile != null)
+            foreach (var c in dockPanel.Contents)
+            {
+                if (c is SaveableEditorBase save)
+                {
+                    System.Diagnostics.Debug.WriteLine($"{c.GetType()} is saving...");
+                    save.OnDatFileSave();
+                }
+            }
+
+            if (RawHSDFile != null)
                 RawHSDFile.Save(FilePath);
         }
 
@@ -461,6 +485,10 @@ namespace HSDRawViewer
                 v.Close();
         }
 
+        // For model part previewing
+        static SBM_ModelPart prev_selected_part = null;
+        static int part_select_index = 0;
+
         /// <summary>
         /// Opens editor for currently selected node if editor exists
         /// </summary>
@@ -477,7 +505,8 @@ namespace HSDRawViewer
                 || SelectedDataNode.Accessor is HSD_MatAnimJoint
                 || SelectedDataNode.Accessor is HSD_ShapeAnimJoint
                 || SelectedDataNode.Accessor is HSD_FogDesc
-                || SelectedDataNode.Accessor is HSD_Camera)
+                || SelectedDataNode.Accessor is HSD_Camera
+                || SelectedDataNode.Accessor is SBM_ModelPart)
             {
                 //foreach (var v in dockPanel.Contents)
                 {
@@ -500,6 +529,25 @@ namespace HSDRawViewer
 
                         if (SelectedDataNode.Accessor is HSD_Camera camera)
                             jedit.Editor.SetCamera(camera);
+
+                        if (SelectedDataNode.Accessor is SBM_ModelPart modelPart && modelPart.Anims.Length > 0)
+                        {
+                            if (prev_selected_part == modelPart)
+                                part_select_index++;
+                            else
+                                part_select_index = 0;
+
+                            prev_selected_part = modelPart;
+
+                            if (part_select_index > modelPart.Anims.Length)
+                                part_select_index = 0;
+
+                            JointAnimManager manager = new JointAnimManager();
+                            for (int i = 0; i < modelPart.StartingBone; i++)
+                                manager.Nodes.Add(new AnimNode());
+                            manager.Nodes.AddRange(new JointAnimManager(modelPart.Anims[part_select_index]).Nodes);
+                            jedit.LoadAnimation(manager);
+                        }
                     }
                 }
             }
@@ -513,7 +561,7 @@ namespace HSDRawViewer
                 edit != null &&
                 edit is DockContent dc)
             {
-                Editors.Add(edit);
+                //Editors.Add(edit);
                 SelectedDataNode.Collapse();
                 edit.Node = SelectedDataNode;
 
@@ -657,7 +705,7 @@ namespace HSDRawViewer
                 FilePath = Tools.FileIO.OpenFile(ApplicationSettings.HSDFileFilter);
 
             if (FilePath != null)
-                RawHSDFile.Save(FilePath);
+                SaveDAT();
         }
 
         /// <summary>
@@ -1043,6 +1091,13 @@ namespace HSDRawViewer
 
         #endregion
 
+        private void testToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            using (var fsm = new FSMTool())
+            {
+                fsm.ShowDialog();
+            }
+        }
     }
     
 }
