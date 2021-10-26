@@ -74,44 +74,45 @@ namespace HSDRawViewer.Converters
             switch (link.Material)
             {
                 case CollMaterial.Rock:
-                    p._material = 1;
+                    p._material = 1; // Rock
                     break;
                 case CollMaterial.Grass:
-                    p._material = 2;
+                    p._material = 2; // Grass
                     break;
                 case CollMaterial.Dirt:
-                    p._material = 3;
+                    p._material = 3; // Soil
                     break;
                 case CollMaterial.Wood:
-                    p._material = 4;
+                    p._material = 4; // Wood
                     break;
                 case CollMaterial.LightMetal:
-                    p._material = 5;
+                    p._material = 5; // Light Metal
                     break;
-                case CollMaterial.GreatBay: // Closest
                 case CollMaterial.HeavyMetal:
-                    p._material = 6;
+                    p._material = 6; // Heavy Metal
                     break;
-                case CollMaterial.UnkFlatZone:
+                case CollMaterial.Cloth:
+                case CollMaterial.Felt:
+                    p._material = 7; // Carpet
+                    break;
                 case CollMaterial.FlatZone:
-                    p._material = 0x0F;
+                    p._material = 0x0F; // Flat Zone
                     break;
                 case CollMaterial.AlienGoop:
-                    p._material = 8;
+                    p._material = 8; // Alien
                     break;
                 case CollMaterial.Water:
-                    p._material = 0x0A;
+                    p._material = 0x0A; // Water
                     break;
-                case CollMaterial.Checkered:
-                    p._material = 0x11;
+                case CollMaterial.Cardboard:
+                    p._material = 0x11; // Checkered (matches same plat)
                     break;
-                case CollMaterial.Basic:
-                case CollMaterial.Glass: // No analogous
-                case CollMaterial.Unknown9:
-                case CollMaterial.Unknown11:
-                case CollMaterial.Unknown14:
-                case CollMaterial.Unknown15:
-                case CollMaterial.Unknown17:
+                case CollMaterial.Snow:
+                    p._material = 0x0D; // Snow
+                    break;
+                case CollMaterial.Ice:
+                    p._material = 0x15; // Ice
+                    break;
                 default:
                     p._material = 0;
                     break;
